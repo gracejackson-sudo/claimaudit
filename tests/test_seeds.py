@@ -94,7 +94,7 @@ def test_consistent_standard_error_is_silent():
 # ------------------------------------------------------------ overlap, reported not flagged
 def test_overlapping_error_bars_called_significant_are_reported_as_unverifiable():
     u = _unver("Our 91.2 \u00b1 0.9 is significantly better than the baseline's 90.8 \u00b1 1.1.\n")
-    assert u and "error bars overlap" in u[0].message
+    assert u and "the two stated intervals overlap" in u[0].message
 
 
 def test_it_is_not_called_an_error():
@@ -132,6 +132,91 @@ def test_two_values_are_too_few_to_be_a_list():
 def test_division_by_one_run_is_skipped():
     assert not _flags("Across 1 runs the standard deviation is 2.0 "
                       "and the standard error is 9.0.\n")
+
+
+# ------------------------------------------------- what the plus-minus means
+FIVE = "Across 5 seeds: 90.0, 90.5, 91.0, 91.5, 92.0, mean 91.0 \u00b1 "
+
+
+def test_a_standard_error_is_not_read_as_a_standard_deviation():
+    """0.79/sqrt(5) is 0.35, and "mean +/- s.e.m." is ubiquitous."""
+    assert not _flags(FIVE + "0.35 (standard error).\n")
+    assert not _flags(FIVE + "0.35 s.e.m.\n")
+
+
+def test_a_confidence_half_width_is_not_read_as_a_standard_deviation():
+    """t(4) * 0.354 is 0.98."""
+    assert not _flags(FIVE + "0.98 (95% CI).\n")
+
+
+def test_a_named_convention_is_held_to():
+    """Naming the convention is information, so it is used: 0.35 is the
+    standard error here, not the confidence half-width."""
+    f = _flags(FIVE + "0.35 (95% CI).\n")
+    assert f and "confidence half-width" in f[0].message
+
+
+def test_an_unstated_convention_accepts_any_of_the_three():
+    assert not _flags(FIVE + "0.79.\n")     # standard deviation
+    assert not _flags(FIVE + "0.35.\n")     # standard error
+    assert not _flags(FIVE + "0.98.\n")     # confidence half-width
+    assert _flags(FIVE + "9.9.\n")          # none of them
+
+
+def test_the_spread_message_says_what_it_assumed():
+    """Silence about the convention would be an overclaim."""
+    f = _flags(FIVE + "9.9.\n")
+    assert f and "does not say which" in f[0].evidence
+    assert "standard deviation" in f[0].message and "standard error" in f[0].message
+
+
+# ------------------------------------------------- the pair must be the list's
+def test_an_unrelated_plus_minus_is_not_bound_to_the_values():
+    assert _check("Per-seed accuracy: 90.0, 91.0, 92.0, "
+                  "with a target of 95.0 \u00b1 1.0.\n") == []
+
+
+def test_a_median_is_not_checked_as_a_mean():
+    """1.0, 2.0, 9.0 have a median of 2.0, and the sentence is correct."""
+    assert _check("Across 3 seeds: 1.0, 2.0, 9.0, median 2.0 \u00b1 4.4.\n") == []
+
+
+def test_a_list_that_is_not_per_seed_is_not_counted_against_the_seeds():
+    assert _check("We evaluate with 5 seeds and report per-epoch losses: "
+                  "1.20, 1.10, 1.05, 1.01, 0.99, 0.98.\n") == []
+
+
+def test_per_seed_lists_are_still_read():
+    assert _flags("Per-seed accuracy: 90.0, 91.0, 92.0, giving 95.0 \u00b1 1.0.\n")
+
+
+# ------------------------------------------------------------ cross references
+def test_a_table_number_is_not_a_standard_error():
+    assert _check("We report the standard deviation of 0.90 across 5 seeds, "
+                  "and the standard error in Table 2 is 0.40.\n") == []
+
+
+# ------------------------------------------------------------ wording
+def test_a_physical_tolerance_is_not_an_error_bar():
+    assert _check("The chamber was held at 20 \u00b1 2 degrees and the sensor "
+                  "reads 21 \u00b1 1 degrees, a significant drift.\n") == []
+
+
+def test_an_integer_list_skipped_as_seed_numbers_says_so(tmp_path):
+    """Keeping the skip is defensible; keeping quiet about it is not."""
+    u = _unver("Scores across 3 seeds: 88, 91, 94, mean 90 \u00b1 3.\n")
+    assert u and "read as seed numbers" in u[0].message
+    assert "not checked" in u[0].message
+
+
+def test_the_skip_is_not_announced_when_there_is_nothing_to_check():
+    assert _check("We use 5 seeds: 0, 1, 2.\n") == []
+    assert _check("Random seeds: 13, 42, 1337.\n") == []
+
+
+def test_a_single_run_is_not_described_in_the_plural():
+    f = _flags("Over 1 seeds: 91.2, 90.8, 91.5.\n")
+    assert f and "1 run is claimed but 3 values are listed" in f[0].message
 
 
 # ------------------------------------------------------------ reading numbers
