@@ -3,8 +3,12 @@
 # One job blocks the build, one only reports. The split is not arbitrary.
 # Measured on a real 620-file repository:
 #
-#   registry, benchmark, seeds   0 flagged
-#   overclaim                  592 flagged
+#   registry, benchmark, seeds   0 flagged, 2.8-4.5s
+#   overclaim                  592 flagged, 2.0-3.1s
+#
+# consistency is deliberately not in the blocking job. It compares numbers
+# across documents and reports 782 findings on that same repository, most of
+# them legitimate differences between different models' cards.
 #
 # The blocking job runs the checks that compare numbers against numbers, so
 # a failure means the arithmetic in a sentence genuinely does not hold. The

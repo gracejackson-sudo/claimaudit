@@ -105,8 +105,12 @@ point. Measured on one real 620-file repository:
 
 | checks | flagged | time |
 |---|---|---|
-| `registry,benchmark,seeds` | 0 | 2.8s |
-| `overclaim` | 592 | 1.2s |
+| `registry,benchmark,seeds` | 0 | 2.8–4.5s |
+| `overclaim` | 592 | 2.0–3.1s |
+
+The times are a range across repeated runs on one laptop, not a benchmark.
+They move by half again between runs depending on what else the machine is
+doing, so a single figure would be a tidier number than we actually have.
 
 The first group compares numbers against numbers, so a failure means the
 arithmetic really does not hold and it is fair to block a commit on it. The
@@ -173,7 +177,10 @@ versus 88.3% at 5.48pp` read as a gap when it is two pairs of coverage and
 width — and it is now a regression test. Everything is compared as intervals
 over the precision the numbers are printed to, so a rounding difference cannot
 be reported as an error. Both the sample and population conventions for spread
-are accepted, because papers use both.
+are accepted, because papers use both. So are all three readings of a `±` —
+standard deviation, standard error and 95% confidence half-width — unless the
+sentence says which it means, in which case that one is used and the report
+says so.
 
 Where two results with error bars are called a significant improvement and the
 bars overlap, that is reported as `UNVERIFIABLE`, not flagged. Overlapping

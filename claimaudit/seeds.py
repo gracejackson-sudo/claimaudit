@@ -184,12 +184,18 @@ def _are_identifiers(vals):
     return all("." not in v for v in vals)
 
 
+# Every rule below needs a plus-minus, a run word, or the phrase "standard
+# error"/"standard deviation". Purely a cost saver: it can only skip
+# sentences the patterns would have rejected anyway.
+CUE = re.compile(PM + r"|\b(?:" + RUN + r")\b|standard\s+(?:error|deviation)", re.I)
+
+
 def check(tfiles):
     out = []
     for rel, _abs, text in tfiles:
         for line, sent in claims.sentences(text, rel):
-            clean = claims._URLISH.sub(" ", sent)
-            out += _sentence(rel, line, clean)
+            if CUE.search(sent):
+                out += _sentence(rel, line, claims._URLISH.sub(" ", sent))
     return out
 
 

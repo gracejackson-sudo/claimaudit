@@ -157,11 +157,18 @@ def _stated(sentence, after=0):
     return None
 
 
+# Every comparison frame needs one of these words, so a sentence without one
+# cannot produce a finding. Purely a cost saver; it can only skip sentences
+# AGAINST and FROM_TO would have rejected anyway.
+CUE = re.compile(r"\bvs\.?|\bversus\b|\bcompared\b|\bagainst\b|\bfrom\b", re.I)
+
+
 def check(tfiles):
     out = []
     for rel, _abs, text in tfiles:
         for line, sent in claims.sentences(text, rel):
-            out += _sentence(rel, line, claims._URLISH.sub(" ", sent))
+            if CUE.search(sent):
+                out += _sentence(rel, line, claims._URLISH.sub(" ", sent))
     return out
 
 

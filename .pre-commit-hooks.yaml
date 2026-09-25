@@ -3,8 +3,11 @@
 # Two kinds of hook, because the checks are not equally suited to blocking a
 # commit. Measured on a real 620-file repository:
 #
-#   registry, benchmark, seeds   0 flagged, 1 verified, 2.8s
-#   overclaim                  592 flagged, 1.2s
+#   registry, benchmark, seeds   0 flagged, 1 verified, 2.8-4.5s
+#   overclaim                  592 flagged, 2.0-3.1s
+#
+# The times are a range across repeated runs on one laptop rather than a
+# benchmark; they move by half again depending on what else is running.
 #
 # The first group is arithmetic. When it flags something, the numbers in the
 # sentence genuinely do not agree, so failing the commit is fair. The second
