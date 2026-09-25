@@ -42,6 +42,15 @@ eight errors we already knew were real:
 * **Caught (3 of 8):** a wrong co-author in a bibliography entry, "nobody" language in a paper, and stale numbers that differed between two documents.
 * **Missed (5 of 8):** a wrong mean quoted in prose, "thousands of measurements" when there were 817, an overclaim about its own verification, a loaded word ("fabricated"), and a loosely stated variance range. These need judgment or computation it does not attempt.
 
+That replay was a one-off and **cannot be repeated**: the repository state it
+ran against has not been preserved, so the 3-of-8 figure stands as a report of
+something we did once, not as a benchmark anyone can re-run. A reconstruction
+of the same eight errors is checked in under `fixtures/known_errors/` with
+`tests/test_known_errors.py` pinning the tool's behaviour on each one. That
+exists to catch drift if the scoring changes — it is not independent evidence
+for 3 of 8, and `fixtures/known_errors/README.md` says so and records which
+parts of it are verbatim and which were rebuilt from a description.
+
 Numeric verification is deliberately conservative. On that repository only
 about 4% of numeric claims were VERIFIED, mostly where the repo had a registry
 file of computed values. In a hand check of 16 randomly sampled VERIFIED items,

@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/gegIr0qTwFV1u7WRcskmb716J0Q</id>
+  <title>arXiv Query: search_query=&amp;id_list=2403.03868&amp;start=0&amp;max_results=50</title>
+  <updated>2026-09-25T19:34:01Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=50&amp;id_list=2403.03868" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>50</opensearch:itemsPerPage>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2403.03868v3</id>
+    <title>Confidence on the Focal: Conformal Prediction with Selection-Conditional Coverage</title>
+    <updated>2025-04-17T19:05:51Z</updated>
+    <link href="https://arxiv.org/abs/2403.03868v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2403.03868v3" rel="related" type="application/pdf" title="pdf"/>
+    <category term="stat.ME" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="math.ST" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-03-06T17:18:24Z</published>
+    <arxiv:comment>Forthcoming at Journal of the Royal Statistical Society Series B</arxiv:comment>
+    <arxiv:primary_category term="stat.ME"/>
+    <author>
+      <name>Ying Jin</name>
+    </author>
+    <author>
+      <name>Zhimei Ren</name>
+    </author>
+  </entry>
+</feed>

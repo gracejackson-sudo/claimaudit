@@ -1,0 +1,27 @@
+% Excerpt. Text recovered verbatim from the pre-fix paper source; see
+% fixtures/known_errors/README.md for per-error provenance.
+
+\section{Results}
+
+\paragraph{What transferred.} Adding model size, bit-width, method,
+benchmark identity and headroom all degraded out-of-family performance.
+
+\paragraph{Why.} Estimating per-benchmark evaluation noise from near-lossless
+schemes---whose true delta should be approximately zero---gives a noise floor
+that accounts for 33--100\% of observed variance on most benchmarks. On GSM8K
+the noise alone is \(\pm 2\)pp, while the quantity being predicted has mean
+\(-0.36\)pp. The target is a difference of two noisy quantities that largely
+cancel: the numerically smallest and hardest-to-predict summary of quantization
+damage available.
+
+\section{Limitations}
+
+\paragraph{Coverage is conditional on the publication process.}
+Split conformal gives exact coverage under exchangeability between calibration
+and test. Our calibration set is the set of configurations a publisher chose to
+release---a selection event. Conditional on selection, calibration points are
+not exchangeable with an arbitrary test point and the guarantee does not
+transfer~\cite{barber2023beyond,jin2024focal}. It holds for a new checkpoint
+drawn from the same publication process. It is \textbf{void} for a recipe the
+reader tuned themselves and that nobody would have published---which is the case
+a practitioner most wants covered.

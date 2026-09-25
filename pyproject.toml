@@ -16,3 +16,7 @@ claimaudit = "claimaudit.cli:main"
 
 [tool.setuptools]
 packages = ["claimaudit"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

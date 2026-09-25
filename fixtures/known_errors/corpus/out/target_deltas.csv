@@ -1,0 +1,11 @@
+checkpoint,benchmark,delta
+gemma-3-w4a16,gsm8k,-0.12
+gemma-3-w8a8,arc_challenge,-0.55
+deepseek-r1-w4a16,gsm8k,-0.31
+deepseek-r1-w8a8,mmlu,-1.02
+qwen-2.5-w4a16,arc_challenge,-0.08
+qwen-2.5-w8a8,gsm8k,-0.47
+llama-3.1-w4a16,mmlu,-0.22
+llama-3.1-w8a8,gsm8k,-0.91
+mistral-w4a16,arc_challenge,-0.15
+mistral-w8a8,mmlu,-0.07
