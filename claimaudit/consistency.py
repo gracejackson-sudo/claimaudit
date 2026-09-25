@@ -4,8 +4,6 @@ from collections import defaultdict
 from itertools import islice
 from .report import Finding, FLAGGED
 
-MAX_FINDINGS = 200
-
 
 def _close(a, b):
     dec = min(a.decimals, b.decimals)
@@ -66,6 +64,4 @@ def check(claims):
                     "consistency", FLAGGED, a.file, a.line,
                     f"says {na.raw}, but {b.file}:{b.line} says {nb.raw} in a similar sentence",
                     f"A: {a.sentence[:120]} || B: {b.sentence[:120]}"))
-                if len(out) >= MAX_FINDINGS:
-                    return out
     return out

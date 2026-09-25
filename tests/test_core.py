@@ -144,6 +144,24 @@ def test_consistency_ignores_rounding_and_same_values():
     assert consistency.check(cs) == []
 
 
+def test_consistency_reports_every_mismatch_with_no_hidden_cap():
+    """The check must not drop findings; the report may trim, but must say so."""
+    from claimaudit.report import render_text, MAX_LISTED
+    n = MAX_LISTED + 5
+    files = []
+    for i in range(n):
+        w = "q" + chr(97 + i // 26) + chr(97 + i % 26)
+        s = f"The {w}alpha {w}beta {w}gamma cohort reported %d rows.\n"
+        files.append((f"a{i}.md", f"a{i}.md", s % (100 + i)))
+        files.append((f"b{i}.md", f"b{i}.md", s % (500 + i)))
+    fs = consistency.check(claims.extract(files))
+    assert len(fs) == n
+    txt = render_text(fs)
+    assert f"showing {MAX_LISTED} of {n} consistency item(s); 5 more not listed" in txt
+    assert sum(1 for l in txt.splitlines() if "similar sentence" in l) == MAX_LISTED
+    assert str(n) in txt.split("summary")[1]   # the summary counts all of them
+
+
 def test_consistency_ignores_unrelated_sentences():
     cs = claims.extract([("a.md", "a.md", "Latency dropped to 12.5% of baseline.\n"),
                          ("b.md", "b.md", "Revenue grew 40.2% last quarter.\n")])

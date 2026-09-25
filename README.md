@@ -24,6 +24,10 @@ Every finding is `VERIFIED`, `FLAGGED` or `UNVERIFIABLE`:
 * `FLAGGED` means *look at this*. It does not mean the claim is wrong.
 * `UNVERIFIABLE` means there was nothing safe to compare against. The default report prints only a count; use `--show-unverifiable` for the list.
 
+The text report lists at most 200 items per check. When it trims, it says how
+many it is hiding, and the summary totals always count every finding. `--json`
+carries the complete set.
+
 ## Install and use
 
     pip install claimaudit

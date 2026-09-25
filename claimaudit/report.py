@@ -5,6 +5,10 @@ from dataclasses import dataclass, asdict, field
 
 VERIFIED, FLAGGED, UNVERIFIABLE = "VERIFIED", "FLAGGED", "UNVERIFIABLE"
 
+# Longest list printed per check. Only the text report is trimmed, and it says
+# so when it trims; --json always carries every finding.
+MAX_LISTED = 200
+
 
 @dataclass
 class Finding:
@@ -42,14 +46,22 @@ def render_text(findings, skipped=(), show_verified=False, show_unverifiable=Fal
         if not fs:
             continue
         lines.append(f"[{chk}]")
+        shown = trimmed = 0
         for f in sorted(fs, key=lambda f: (order[f.status], f.file, f.line)):
             if f.status == VERIFIED and not show_verified:
                 continue
             if f.status == UNVERIFIABLE and not show_unverifiable:
                 continue
+            if shown >= MAX_LISTED:
+                trimmed += 1
+                continue
+            shown += 1
             lines.append(f"  {f.status:<12} {f.file}:{f.line}  {f.message}")
             if f.evidence:
                 lines.append(f"               {f.evidence}")
+        if trimmed:
+            lines.append(f"  ... showing {shown} of {shown + trimmed} {chk} item(s); "
+                         f"{trimmed} more not listed. --json gives every one.")
         lines.append("")
     nu = sum(1 for f in findings if f.status == UNVERIFIABLE)
     nv = sum(1 for f in findings if f.status == VERIFIED)
