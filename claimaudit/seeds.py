@@ -112,7 +112,7 @@ def _sentence(rel, line, clean):
             # 3. the seed count must be the number of values listed
             if sn and int(sn.group("n")) != n:
                 out.append(Finding("seeds", FLAGGED, rel, line,
-                                   f"{sn.group('n')} {('runs')} are claimed but {n} "
+                                   f"{sn.group('n')} runs are claimed but {n} "
                                    f"value(s) are listed",
                                    "one of the two is wrong"))
 
