@@ -31,7 +31,7 @@ that is stated plainly.
 
 | id | error | text provenance |
 |---|---|---|
-| E1 | bibliography credits Candès for a paper by Jin & Ren | **verbatim** — the broken `@article{jin2024focal}` form; the true record is the recorded arXiv response in `records/` |
+| E1 | bibliography credits Candès for a paper by Jin & Ren | **wrong author verbatim, entry rebuilt** — the miscredit is the real error; the entry's field layout is copied from the *corrected* `paper/refs.bib:54` in the post-fix repo and the author line reverted, so it carries the arXiv id in `journal` as the original did. The true record is the recorded arXiv response in `records/` |
 | E2 | "nobody would have published" | **verbatim** — recovered from the day-3 paper source, line 298 |
 | E3 | stale figures across documents (138 vs 131 rows; 0.7323 vs 0.7545 MAE) | **values verbatim, sentences rewritten** — the real numbers and the real 138→131 and 0.7323→0.7545 transitions are documented in the post-fix `PROVENANCE.md` and `FINDINGS.md`, but the two near-identical sentences that made them a cross-file inconsistency did not survive, so they are reconstructed |
 | E4 | target mean stated as −0.36 when the data means −0.39 | **verbatim** — recovered from the day-3 paper source, line 217; the −0.39 ground truth is the post-fix `paper/numbers.tex` |
