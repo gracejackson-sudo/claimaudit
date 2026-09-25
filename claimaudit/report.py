@@ -41,7 +41,7 @@ def summarize(findings):
 def render_text(findings, skipped=(), show_verified=False, show_unverifiable=False):
     lines = ["claimaudit report", "=" * 60, LIMITS, ""]
     order = {FLAGGED: 0, UNVERIFIABLE: 1, VERIFIED: 2}
-    for chk in ("scan", "source", "citation", "consistency", "overclaim"):
+    for chk in ("scan", "registry", "source", "citation", "consistency", "overclaim"):
         fs = [f for f in findings if f.check == chk]
         if not fs:
             continue

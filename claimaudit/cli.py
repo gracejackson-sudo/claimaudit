@@ -3,12 +3,12 @@ from __future__ import annotations
 import argparse, sys
 
 from . import (__version__, scan, claims as claims_mod, sources, overclaim, consistency,
-               citations, collected, license as lic)
+               citations, collected, registry, license as lic)
 from .report import render_text, render_json, Finding, FLAGGED, UNVERIFIABLE
 
 
 def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
-        fetch=citations.default_fetch, exclude=()):
+        fetch=citations.default_fetch, exclude=(), registry_path=None):
     """Run checks; returns (findings, skipped)."""
     import os
     if not os.path.exists(path):
@@ -44,6 +44,13 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
         findings += consistency.check(cl)
     if "citation" in wanted:
         findings += citations.check(tfiles, bfiles, fetch=fetch, offline=offline, max_urls=max_urls)
+    if "registry" in wanted:
+        reg = registry.discover(base, registry_path)
+        if reg:
+            findings += registry.check(tfiles, reg)
+        elif registry_path:
+            findings.append(Finding("registry", FLAGGED, registry_path, 0,
+                                    "no claim registry at this path"))
     said = collected.note(collected.detect(tfiles), tfiles, findings)
     if said:
         findings.append(Finding("scan", UNVERIFIABLE, "", 0, said[0], said[1]))
@@ -58,7 +65,9 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("check", help="audit a directory or file")
     c.add_argument("path")
-    c.add_argument("--only", help="comma list: overclaim,source,citation,consistency")
+    c.add_argument("--only", help="comma list: overclaim,source,citation,consistency,registry")
+    c.add_argument("--registry", help="claim registry (JSON or CSV); default: "
+                                      "claimaudit-claims.json/.csv or claims.json/.csv in the folder")
     c.add_argument("--json", action="store_true")
     c.add_argument("--show-verified", action="store_true")
     c.add_argument("--show-unverifiable", action="store_true")
@@ -88,7 +97,8 @@ def main(argv=None):
         print(f"unknown check(s): {bad}", file=sys.stderr)
         return 2
     try:
-        findings, skipped = run(ns.path, only, ns.offline, ns.strict, ns.max_urls, paid=(t == "paid"), exclude=ns.exclude)
+        findings, skipped = run(ns.path, only, ns.offline, ns.strict, ns.max_urls,
+                                paid=(t == "paid"), exclude=ns.exclude, registry_path=ns.registry)
     except FileNotFoundError:
         print(f"path not found: {ns.path}", file=sys.stderr)
         return 2
