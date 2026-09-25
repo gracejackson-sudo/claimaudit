@@ -21,6 +21,14 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
             body, err = scan.read_safe(p)
             if err is None:
                 dest.append((rel, p, body))
+                # A container we opened but got no prose out of looks exactly
+                # like a clean document, so it has to say why it is empty.
+                if not body.strip():
+                    why = scan.no_prose_reason(p)
+                    if why:
+                        findings.append(Finding("scan", UNVERIFIABLE, rel, 0,
+                                                "no prose could be read from this file, "
+                                                "so none of it was checked", why))
             else:
                 findings.append(Finding("scan", UNVERIFIABLE, rel, 0,
                                         f"could not be read, so it was not checked: {err}"))

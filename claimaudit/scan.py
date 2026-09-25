@@ -54,6 +54,40 @@ def discover(root, exclude=()):
 
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+MC = "{http://schemas.openxmlformats.org/markup-compatibility/2006}"
+
+
+PROSE_CELLS = ("markdown", "heading")      # heading cells are nbformat v3 prose
+KNOWN_CELLS = PROSE_CELLS + ("code", "raw")
+
+
+def _cells(nb):
+    """Cells in order, from either notebook layout. Raises if there are none.
+
+    nbformat 4 keeps them under "cells"; version 3 keeps them under
+    worksheets[i].cells. A file we cannot find cells in at all is not a
+    notebook, and must surface as an unread file rather than as empty prose.
+    """
+    if isinstance(nb.get("cells"), list):
+        cells = nb["cells"]
+    elif isinstance(nb.get("worksheets"), list):
+        cells = []
+        for ws in nb["worksheets"]:
+            if isinstance(ws, dict) and isinstance(ws.get("cells"), list):
+                cells += ws["cells"]
+    else:
+        raise ValueError("no 'cells' or 'worksheets' list, so this is not a notebook")
+    typed = [c for c in cells if isinstance(c, dict) and c.get("cell_type") in KNOWN_CELLS]
+    if cells and not typed:
+        raise ValueError("no cell has a recognised cell_type, so this is not a notebook")
+    return typed
+
+
+def _source(src):
+    """A cell's source as text. null and non-string parts contribute nothing."""
+    if isinstance(src, list):
+        return "".join(x for x in src if isinstance(x, str))
+    return src if isinstance(src, str) else ""
 
 
 def read_notebook(path):
@@ -61,30 +95,93 @@ def read_notebook(path):
 
     Code cells are skipped on purpose. Their outputs are full of numbers that
     nobody wrote as a claim, and treating them as prose would bury the real
-    claims in noise. A reported line number counts lines of markdown, so it
-    is the line within the cell text rather than within the .ipynb JSON.
+    claims in noise. A reported line number counts lines of the concatenated
+    markdown, so it is neither a line of the .ipynb JSON nor a line within the
+    cell that carries the claim.
     """
     with open(path, encoding="utf-8") as fh:
         nb = json.load(fh)
     if not isinstance(nb, dict):
         raise ValueError("notebook is not a JSON object")
-    out = []
-    for cell in nb.get("cells", []):
-        if not isinstance(cell, dict) or cell.get("cell_type") != "markdown":
-            continue
-        src = cell.get("source", "")
-        out.append("".join(src) if isinstance(src, list) else str(src))
-    return "\n\n".join(out)
+    return "\n\n".join(_source(c.get("source", "")) for c in _cells(nb)
+                       if c.get("cell_type") in PROSE_CELLS)
+
+
+def no_prose_reason(path):
+    """Why a container file we could open yielded no prose. Best effort.
+
+    Silence has to be explained: a notebook of nothing but code cells is not
+    the same fact as a notebook whose prose says nothing worth flagging.
+    """
+    ext = os.path.splitext(path)[1].lower()
+    try:
+        if ext == ".ipynb":
+            with open(path, encoding="utf-8") as fh:
+                cells = _cells(json.load(fh))
+            kinds = [c.get("cell_type") for c in cells]
+            if not kinds:
+                return "it has no cells"
+            if all(k == "code" for k in kinds):
+                return (f"it contains only code cells ({len(kinds)} of them), "
+                        f"and code is not read as prose")
+            if not any(k in PROSE_CELLS for k in kinds):
+                return f"none of its {len(kinds)} cells is a markdown cell"
+            return "its markdown cells are all empty"
+        if ext == ".docx":
+            return "it has no paragraphs carrying text"
+    except (OSError, ValueError, KeyError):
+        pass
+    return None
+
+
+def _branch(el):
+    """Children to walk. Word stores a text box twice, once per compatibility
+    branch, so taking both duplicates every sentence inside it."""
+    if el.tag == MC + "AlternateContent":
+        return [c for c in el if c.tag == MC + "Choice"] \
+            or [c for c in el if c.tag == MC + "Fallback"]
+    return list(el)
+
+
+def _para_text(p):
+    """A paragraph's text, in document order, separators kept.
+
+    Walking w:t alone fused sentences across a line break and welded labels
+    onto numbers across a tab. Nested paragraphs -- text boxes, mostly -- are
+    read here and then skipped as paragraphs of their own, so their text
+    appears exactly once.
+    """
+    parts = []
+
+    def walk(el):
+        for c in _branch(el):
+            if c.tag == W + "t":
+                parts.append(c.text or "")
+            elif c.tag in (W + "br", W + "cr"):
+                parts.append("\n")
+            elif c.tag == W + "tab":
+                parts.append("\t")
+            else:
+                walk(c)
+
+    walk(p)
+    return "".join(parts)
+
+
+def _paragraphs(el, out):
+    for child in _branch(el):
+        if child.tag == W + "p":
+            out.append(_para_text(child))
+        else:
+            _paragraphs(child, out)
 
 
 def read_docx(path):
     """Body paragraphs as lines. A reported line number is a paragraph number."""
     with zipfile.ZipFile(path) as z:
         xml = z.read("word/document.xml")
-    root = ET.fromstring(xml)
     paras = []
-    for p in root.iter(W + "p"):
-        paras.append("".join(t.text or "" for t in p.iter(W + "t")))
+    _paragraphs(ET.fromstring(xml), paras)
     return "\n".join(paras)
 
 
