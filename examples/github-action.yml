@@ -38,7 +38,7 @@ jobs:
           CLAIMAUDIT_LICENSE_KEY: ${{ secrets.CLAIMAUDIT_LICENSE_KEY }}
         run: |
           claimaudit check . --offline \
-            --only registry,benchmark,seeds,consistency \
+            --only registry,benchmark,seeds \
             --fail-on flagged
 
   advisory:

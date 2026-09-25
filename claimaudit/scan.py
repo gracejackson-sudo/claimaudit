@@ -185,6 +185,38 @@ def read_docx(path):
     return "\n".join(paras)
 
 
+# Parts of a .docx that carry prose and that read_docx does not touch. Real
+# citations live in footnotes, so a document whose footnotes were never
+# opened must not come back looking the same as one that has none.
+DOCX_PARTS = (
+    (re.compile(r"^word/footnotes\.xml$"), "footnotes"),
+    (re.compile(r"^word/endnotes\.xml$"), "endnotes"),
+    (re.compile(r"^word/header\d*\.xml$"), "headers"),
+    (re.compile(r"^word/footer\d*\.xml$"), "footers"),
+    (re.compile(r"^word/comments\.xml$"), "comments"),
+)
+
+
+def docx_unread_parts(path):
+    """-> names of prose-bearing parts the file contains but we do not read.
+
+    Only the zip listing is consulted; nothing is parsed. Whether to read
+    these is a separate decision with its own line-numbering and provenance
+    questions. Saying they are there is what stops silence reading as
+    approval over them.
+    """
+    try:
+        with zipfile.ZipFile(path) as z:
+            names = z.namelist()
+    except (OSError, zipfile.BadZipFile):
+        return []
+    out = []
+    for pat, label in DOCX_PARTS:
+        if label not in out and any(pat.match(n) for n in names):
+            out.append(label)
+    return out
+
+
 def read(path):
     ext = os.path.splitext(path)[1].lower()
     if ext == ".ipynb":

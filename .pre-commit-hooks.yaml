@@ -29,6 +29,10 @@
   language: python
   pass_filenames: false
   always_run: true
+  # pre-commit hides a passing hook's output. Without this the one hook whose
+  # job is to block shows a green tick and says nothing at all, including on
+  # the free tier where all three of these checks are skipped.
+  verbose: true
 
 - id: claimaudit-advisory
   name: claimaudit (advisory, never blocks)

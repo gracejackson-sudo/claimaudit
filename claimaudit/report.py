@@ -30,15 +30,21 @@ LIMITS = (
 )
 
 
-def summarize(findings):
-    out = {}
+def summarize(findings, ran=()):
+    """Counts per check.
+
+    Checks that ran and found nothing are listed at zero rather than left
+    out. A heading with nothing under it says neither "clean" nor "did not
+    run", and the difference between those two is the whole point.
+    """
+    out = {c: {VERIFIED: 0, FLAGGED: 0, UNVERIFIABLE: 0} for c in ran}
     for f in findings:
         out.setdefault(f.check, {VERIFIED: 0, FLAGGED: 0, UNVERIFIABLE: 0})
         out[f.check][f.status] += 1
     return out
 
 
-def render_text(findings, skipped=(), show_verified=False, show_unverifiable=False):
+def render_text(findings, skipped=(), show_verified=False, show_unverifiable=False, ran=()):
     lines = ["claimaudit report", "=" * 60, LIMITS, ""]
     order = {FLAGGED: 0, UNVERIFIABLE: 1, VERIFIED: 2}
     for chk in ("scan", "registry", "benchmark", "seeds", "source", "citation",
@@ -88,9 +94,12 @@ def render_text(findings, skipped=(), show_verified=False, show_unverifiable=Fal
         lines.append(f"{nv} VERIFIED item(s) not listed; list them with --show-verified.")
     lines.append("")
     lines.append("summary")
-    for chk, c in summarize(findings).items():
+    counted = summarize(findings, ran)
+    for chk, c in counted.items():
         lines.append(f"  {chk:<12} verified {c[VERIFIED]:>4}   flagged {c[FLAGGED]:>4}"
                      f"   unverifiable {c[UNVERIFIABLE]:>4}")
+    if not counted:
+        lines.append("  (no check ran)")
     if skipped:
         lines.append("")
         lines.append("skipped (license required): " + ", ".join(skipped))
@@ -109,10 +118,23 @@ def counts(findings):
             "total": len(findings)}
 
 
-def render_json(findings, skipped=()):
+def render_json(findings, skipped=(), ran=()):
     from . import __version__
     return json.dumps({"schema_version": SCHEMA_VERSION, "tool_version": __version__,
                        "limits": LIMITS, "counts": counts(findings),
-                       "summary": summarize(findings),
-                       "skipped": list(skipped),
+                       "summary": summarize(findings, ran),
+                       "skipped": list(skipped), "error": None,
                        "findings": [asdict(f) for f in findings]}, indent=2)
+
+
+def render_error_json(why):
+    """A usage error, as JSON.
+
+    `claimaudit check ... --json > claimaudit.json` is the shipped pattern.
+    Printing nothing on exit 2 leaves a zero-byte file and a parse error
+    where the cause should be.
+    """
+    from . import __version__
+    return json.dumps({"schema_version": SCHEMA_VERSION, "tool_version": __version__,
+                       "limits": LIMITS, "counts": counts([]), "summary": {},
+                       "skipped": [], "error": why, "findings": []}, indent=2)

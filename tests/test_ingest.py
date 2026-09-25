@@ -209,6 +209,41 @@ def test_a_docx_with_no_text_is_reported_rather_than_read_as_clean(tmp_path):
     assert "no paragraphs carrying text" in note[0].evidence
 
 
+# --------------------------------------------- parts of a .docx we do not read
+def _docx_with(path, *parts):
+    with zipfile.ZipFile(path, "w") as z:
+        z.writestr("word/document.xml", DOC_XML.format(_para("Some body prose.")))
+        for name in parts:
+            z.writestr(name, "<x/>")
+
+
+def test_unread_docx_parts_are_named(tmp_path):
+    """Real citations live in footnotes, so silence over them reads as
+    approval of exactly what the citation check exists for."""
+    _docx_with(tmp_path / "a.docx", "word/footnotes.xml", "word/header1.xml",
+               "word/header2.xml")
+    assert scan.docx_unread_parts(str(tmp_path / "a.docx")) == ["footnotes", "headers"]
+    findings, _ = cli.run(str(tmp_path), only=["overclaim"])
+    note = [f for f in findings if f.check == "scan" and "not read" in f.message]
+    assert note and note[0].status == "UNVERIFIABLE"
+    assert "footnotes and headers" in note[0].message
+
+
+def test_a_docx_with_nothing_but_a_body_says_nothing_extra(tmp_path):
+    _docx_with(tmp_path / "a.docx")
+    assert scan.docx_unread_parts(str(tmp_path / "a.docx")) == []
+    findings, _ = cli.run(str(tmp_path), only=["overclaim"])
+    assert not [f for f in findings if f.check == "scan"]
+
+
+def test_the_unread_parts_are_not_parsed(tmp_path, monkeypatch):
+    """Naming them is the whole fix; reading them is a separate decision."""
+    _docx_with(tmp_path / "a.docx", "word/footnotes.xml")
+    monkeypatch.setattr(scan, "read_docx",
+                        lambda p: (_ for _ in ()).throw(AssertionError("parsed")))
+    assert scan.docx_unread_parts(str(tmp_path / "a.docx")) == ["footnotes"]
+
+
 def test_the_nothing_found_message_lists_the_container_formats(tmp_path):
     """This is the message someone pointing at a notebook folder reads."""
     (tmp_path / "main.py").write_text("x = 1\n", encoding="utf-8")
