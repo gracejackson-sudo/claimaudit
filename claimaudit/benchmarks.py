@@ -23,7 +23,11 @@ import re
 from . import claims
 from .report import Finding, VERIFIED, FLAGGED
 
-N = r"\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?"
+# A number, whole. The thousands-separated form is tried first because the
+# plain form would otherwise match "1" of "1,000", and the trailing guard
+# stops the alternation from settling for a prefix: without it "2023" is
+# matched as "202" and every four-digit token in the corpus is corrupted.
+N = r"(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?!\.?\d)"
 _PCT = r"\s*(?:%|percent|pp\b|percentage points?)?"
 # "91.2 vs 88.0", "91.2 compared to 88.0", "91.2 against 88.0"
 AGAINST = re.compile(r"(?P<a>" + N + r")" + _PCT +

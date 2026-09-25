@@ -1,6 +1,8 @@
 """Seed and variance claims: can the reported numbers describe the same runs?"""
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from claimaudit import cli, seeds
@@ -130,6 +132,22 @@ def test_two_values_are_too_few_to_be_a_list():
 def test_division_by_one_run_is_skipped():
     assert not _flags("Across 1 runs the standard deviation is 2.0 "
                       "and the standard error is 9.0.\n")
+
+
+# ------------------------------------------------------------ reading numbers
+def test_a_number_of_four_or_more_digits_is_matched_whole():
+    for raw in ("2023", "2048", "1000000", "1,000.0", "91.25"):
+        assert re.match(seeds.N, raw).group(0) == raw, raw
+
+
+def test_a_thousands_separator_is_not_a_value_separator():
+    """raw.split(",") turned three values into six and flagged all of them."""
+    assert seeds._values("1,000.0, 2,000.0, 3,000.0") == ["1,000.0", "2,000.0", "3,000.0"]
+
+
+def test_thousands_separated_values_do_not_produce_false_flags():
+    assert _flags("Over 3 seeds: 1,000.0, 2,000.0, 3,000.0, "
+                  "giving 2,000.0 \u00b1 1,000.0.\n") == []
 
 
 # ------------------------------------------------------------ plumbing

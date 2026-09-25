@@ -29,7 +29,9 @@ import re
 from . import claims
 from .report import Finding, VERIFIED, FLAGGED, UNVERIFIABLE
 
-N = r"\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?"
+# See benchmarks.N: longest alternative first, and a trailing guard so that
+# "2023" cannot be read as "202".
+N = r"(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?!\.?\d)"
 SN = r"[-\u2212+]?(?:" + N + r")"
 PM = r"(?:\u00b1|\+/-|\+/\u2212|\+-)"
 RUN = r"seeds?|runs?|trials?|replicates?|restarts?|folds?"
@@ -74,7 +76,13 @@ def _std(xs, ddof):
 
 
 def _values(raw):
-    return [v.strip() for v in raw.split(",")]
+    """The numbers in a comma-separated list, tokenised rather than split.
+
+    Splitting on "," turns "1,000.0, 2,000.0" into four values, because the
+    same comma is both the separator and the thousands mark. Matching the
+    number pattern instead lets the pattern decide which is which.
+    """
+    return re.findall(SN, raw)
 
 
 def _are_identifiers(vals):

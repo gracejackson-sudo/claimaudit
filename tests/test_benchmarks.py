@@ -6,6 +6,8 @@ cases are the real specification.
 """
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from claimaudit import benchmarks, cli
@@ -142,6 +144,24 @@ def test_proportions_against_percentage_points(tmp_path):
 
 def test_dividing_by_a_value_that_could_be_zero_is_skipped():
     assert _check("Error goes from 0 to 0.4, a 40% relative increase.\n") == []
+
+
+# ------------------------------------------------------------ reading numbers
+def test_a_number_of_four_or_more_digits_is_matched_whole():
+    """The alternation used to settle for the first three digits.
+
+    "2023" came back as "202" and "2048" as "204", which silently corrupted
+    token counts, step counts, latencies and years -- most real ML numbers.
+    """
+    for raw in ("2023", "2500", "2048", "1000000", "1,000.0", "91.25", "0.35"):
+        assert re.match(benchmarks.N, raw).group(0) == raw, raw
+
+
+def test_large_values_do_not_become_a_false_positive():
+    assert _verified("Throughput rises from 1000 to 2500 requests, "
+                     "a gain of 1500 points.\n")
+    assert not _flags("Throughput rises from 1000 to 2500 requests, "
+                      "a gain of 1500 points.\n")
 
 
 # ------------------------------------------------------------ plumbing
