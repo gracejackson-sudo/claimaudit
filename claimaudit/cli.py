@@ -27,7 +27,8 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
     if not tfiles and not bfiles:
         findings.append(Finding("scan", FLAGGED, path, 0,
                                 "no readable documents were found here, so nothing was checked "
-                                "(claimaudit reads .md, .markdown, .txt, .tex, .rst and .bib)"))
+                                "(claimaudit reads .md, .markdown, .txt, .tex, .rst, .ipynb, "
+                                ".docx and .bib)"))
     wanted = list(only) if only else list(lic.FREE_CHECKS + lic.PAID_CHECKS)
     skipped = [c for c in wanted if c in lic.PAID_CHECKS and not paid]
     wanted = [c for c in wanted if c not in skipped]
@@ -55,6 +56,8 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
         elif registry_path:
             findings.append(Finding("registry", FLAGGED, registry_path, 0,
                                     "no claim registry at this path"))
+        else:
+            findings += registry.no_registry(tfiles)
     said = collected.note(collected.detect(tfiles), tfiles, findings)
     if said:
         findings.append(Finding("scan", UNVERIFIABLE, "", 0, said[0], said[1]))

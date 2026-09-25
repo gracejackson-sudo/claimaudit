@@ -46,7 +46,7 @@ def render_text(findings, skipped=(), show_verified=False, show_unverifiable=Fal
         fs = [f for f in findings if f.check == chk]
         if not fs:
             continue
-        lines.append(f"[{chk}]")
+        body = []
         shown = trimmed = 0
         # "scan" reports files that were never read. Collapsing those into a
         # count would hide the fact that the audit is incomplete, so they are
@@ -62,19 +62,28 @@ def render_text(findings, skipped=(), show_verified=False, show_unverifiable=Fal
                 continue
             shown += 1
             loc = f"{f.file}:{f.line}  " if f.file else ""
-            lines.append(f"  {f.status:<12} {loc}{f.message}")
+            body.append(f"  {f.status:<12} {loc}{f.message}")
             if f.evidence:
-                lines.append(f"               {f.evidence}")
+                body.append(f"               {f.evidence}")
         if trimmed:
-            lines.append(f"  ... showing {shown} of {shown + trimmed} {chk} item(s); "
-                         f"{trimmed} more not listed. --json gives every one.")
-        lines.append("")
+            body.append(f"  ... showing {shown} of {shown + trimmed} {chk} item(s); "
+                        f"{trimmed} more not listed. --json gives every one.")
+        # Every item of this check was hidden, so its heading would stand alone.
+        if body:
+            lines.append(f"[{chk}]")
+            lines += body
+            lines.append("")
     listed = [f for f in findings if f.check != "scan"]   # scan items are never collapsed
-    nu = sum(1 for f in listed if f.status == UNVERIFIABLE)
+    unused = [f for f in listed if f.status == UNVERIFIABLE
+              and f.extra.get("reason") == "unused"]
+    nu = sum(1 for f in listed if f.status == UNVERIFIABLE) - len(unused)
     nv = sum(1 for f in listed if f.status == VERIFIED)
     if not show_unverifiable and nu:
         lines.append(f"{nu} UNVERIFIABLE item(s) not listed (no source to check against, or too little "
                      f"evidence to match safely); list them with --show-unverifiable.")
+    if not show_unverifiable and unused:
+        lines.append(f"{len(unused)} registry entry/entries not listed (no document uses them); "
+                     f"list them with --show-unverifiable.")
     if not show_verified and nv:
         lines.append(f"{nv} VERIFIED item(s) not listed; list them with --show-verified.")
     lines.append("")
