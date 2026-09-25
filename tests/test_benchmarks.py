@@ -146,6 +146,78 @@ def test_dividing_by_a_value_that_could_be_zero_is_skipped():
     assert _check("Error goes from 0 to 0.4, a 40% relative increase.\n") == []
 
 
+# ------------------------------------------------- the change must be the pair's
+def test_a_change_from_another_clause_is_not_bound_to_the_pair():
+    """The stated change has to follow the pair and share its clause.
+
+    Searching the whole sentence for a gain word bound numbers that belong
+    to a different claim to whichever pair happened to be present.
+    """
+    assert _check("Table 3 shows a 5 point improvement on SQuAD; "
+                  "here we report 91.2 versus 88.0.\n") == []
+    assert _check("Prior work reported a gain of 10 points, whereas we "
+                  "measure 91.2 versus 88.0.\n") == []
+
+
+def test_a_range_of_results_is_not_a_change():
+    """"ranged from 88.0 to 91.2" is the spread of a set, not a step."""
+    assert _check("Accuracy ranged from 88.0 to 91.2 depending on seed, "
+                  "a 5 point margin over prior work.\n") == []
+    assert _check("Scores varied from 88.0 to 91.2, a 5 point margin.\n") == []
+
+
+def test_two_comparison_frames_mean_we_decline_to_report():
+    """Which pair the stated change belongs to would be a guess."""
+    assert _check("Latency falls from 120 to 95 while accuracy rises from "
+                  "88.0 to 91.2, a 3.2 point gain.\n") == []
+    assert _check("On A we get 91.2 versus 88.0; on B, 75.0 versus 70.0, "
+                  "a gain of 5.0 points.\n") == []
+
+
+def test_a_pair_taken_from_a_list_of_results_is_declined():
+    """91.2, 90.1 and 89.3 versus 88.0 has a consistent reading; the pair
+    next to "versus" is not necessarily the one meant."""
+    assert _check("We report 91.2, 90.1 and 89.3 versus 88.0, "
+                  "a gain of 3.2 points.\n") == []
+
+
+def test_a_verb_before_the_pair_with_its_number_after_is_still_read():
+    """Narrowing must not lose "beats the baseline, 91.2 vs 88.0, by 7.0"."""
+    assert _flags("Our method beats the baseline, 91.2 vs 88.0, by 7.0 points.\n")
+
+
+# ------------------------------------------------------- which arithmetic
+def test_the_baseline_of_a_versus_frame_is_the_second_value():
+    """In "A versus B", B is the baseline. Dividing by A inverted the check."""
+    assert not _flags("We reach 200 versus 100, a 100% relative improvement.\n")
+    assert _flags("We reach 200 versus 100, a 20% relative improvement.\n")
+
+
+def test_the_word_relative_does_not_override_a_stated_unit():
+    """"Relative to the baseline" is not a claim about relative change."""
+    assert not _flags("Relative to the baseline, we reach 91.2 versus 88.0, "
+                      "a gain of 3.2 points.\n")
+
+
+def test_a_percent_change_is_tried_both_ways():
+    """One optional adjective must not decide the verdict on the same sum."""
+    assert not _flags("We reach 91.2 versus the baseline's 88.0, a 3.6% improvement.\n")
+    assert not _flags("We reach 91.2 versus the baseline's 88.0, "
+                      "a 3.6% relative improvement.\n")
+    assert _flags("We reach 91.2 versus the baseline's 88.0, a 25% improvement.\n")
+
+
+def test_a_hyperparameter_schedule_gets_no_verdict():
+    """Arithmetically true, but a verdict on a schedule is noise."""
+    assert _check("We tune lr from 0.001 to 0.0001, a 90% reduction.\n") == []
+    assert _check("The learning rate decays from 0.01 to 0.001, a 90% drop.\n") == []
+
+
+def test_large_differences_are_not_printed_in_scientific_notation():
+    f = _flags("Counts go from 999999999999999999999 to 1, a difference of 5 points.\n")
+    assert f and "e+" not in f[0].message
+
+
 # ------------------------------------------------------------ reading numbers
 def test_a_number_of_four_or_more_digits_is_matched_whole():
     """The alternation used to settle for the first three digits.
