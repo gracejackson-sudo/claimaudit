@@ -129,7 +129,7 @@ def test_scanning_zero_files_must_not_look_clean(tmp_path):
     prints an empty report and exits 0 — the same output as a document set
     with nothing wrong in it.
     """
-    d = _write(tmp_path, {"main.py": "x = 1\n", "notes.docx": "not really a docx\n"})
+    d = _write(tmp_path, {"main.py": "x = 1\n", "notes.pdf": "%PDF-1.4 not a format we read\n"})
     findings, skipped = cli.run(d, paid=True)
     assert [f.check for f in findings] == ["scan"]
     assert findings[0].status == FLAGGED
