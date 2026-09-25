@@ -211,7 +211,43 @@ def test_percent_with_space_before_sign():
 
 
 # ===================================================================
-# E. Report and CLI contracts.
+# E. Collected-content detection. It must inform, never exclude.
+# ===================================================================
+
+def _cards(n, body="# Title\n\nThis is the best model ever released.\n"):
+    return {f"cards/c{i}.md": f"---\nlicense: mit\nbase_model: x/y\n---\n\n{body}"
+            for i in range(n)}
+
+
+def test_collected_content_is_reported_but_never_excluded(tmp_path):
+    files = _cards(25)
+    files["README.md"] = "We measured 42 rows in the study.\n"
+    d = _write(tmp_path, files)
+    findings, skipped = cli.run(d, only=["overclaim"], paid=True)
+    notes = [f for f in findings if f.check == "scan"]
+    assert len(notes) == 1 and "look collected" in notes[0].message
+    assert "--exclude 'cards/*'" in notes[0].evidence
+    # the point of "detect and tell": the flags are still there to be seen
+    assert any(f.check == "overclaim" and f.file.startswith("cards") for f in findings)
+    assert "cards" in render_text(findings, skipped)
+
+
+def test_a_folder_of_hand_written_prose_is_not_called_collected(tmp_path):
+    """Guards the false positive that matters: ordinary docs must stay silent."""
+    d = _write(tmp_path, {f"doc{i}.md": f"# Chapter {i}\n\nWe saw {40 + i} rows here.\n"
+                          for i in range(30)})
+    findings, _ = cli.run(d, only=["overclaim"], paid=True)
+    assert [f for f in findings if f.check == "scan"] == []
+
+
+def test_small_directories_are_left_alone(tmp_path):
+    d = _write(tmp_path, _cards(3))
+    findings, _ = cli.run(d, only=["overclaim"], paid=True)
+    assert [f for f in findings if f.check == "scan"] == []
+
+
+# ===================================================================
+# F. Report and CLI contracts.
 # ===================================================================
 
 def test_duplicate_and_padded_only_values_are_accepted(tmp_path, capsys):

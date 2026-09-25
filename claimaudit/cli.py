@@ -2,7 +2,8 @@
 from __future__ import annotations
 import argparse, sys
 
-from . import __version__, scan, claims as claims_mod, sources, overclaim, consistency, citations, license as lic
+from . import (__version__, scan, claims as claims_mod, sources, overclaim, consistency,
+               citations, collected, license as lic)
 from .report import render_text, render_json, Finding, FLAGGED, UNVERIFIABLE
 
 
@@ -43,6 +44,9 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
         findings += consistency.check(cl)
     if "citation" in wanted:
         findings += citations.check(tfiles, bfiles, fetch=fetch, offline=offline, max_urls=max_urls)
+    said = collected.note(collected.detect(tfiles), tfiles, findings)
+    if said:
+        findings.append(Finding("scan", UNVERIFIABLE, "", 0, said[0], said[1]))
     return findings, skipped
 
 

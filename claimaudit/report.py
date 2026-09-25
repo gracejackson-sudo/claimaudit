@@ -60,7 +60,8 @@ def render_text(findings, skipped=(), show_verified=False, show_unverifiable=Fal
                 trimmed += 1
                 continue
             shown += 1
-            lines.append(f"  {f.status:<12} {f.file}:{f.line}  {f.message}")
+            loc = f"{f.file}:{f.line}  " if f.file else ""
+            lines.append(f"  {f.status:<12} {loc}{f.message}")
             if f.evidence:
                 lines.append(f"               {f.evidence}")
         if trimmed:

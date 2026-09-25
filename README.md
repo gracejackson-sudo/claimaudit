@@ -28,6 +28,17 @@ The text report lists at most 200 items per check. When it trims, it says how
 many it is hiding, and the summary totals always count every finding. `--json`
 carries the complete set.
 
+The `[scan]` section also warns when much of what it read looks *collected*
+rather than written by you — scraped pages, vendored docs, generated cards.
+Auditing those treats someone else's words as your claims; on one real
+repository they produced 85% of all findings. claimaudit never excludes them
+for you, because every rule safe enough to apply automatically turned out not
+to be: `.gitignore` is used for private drafts as often as for generated
+files, and YAML frontmatter marks hand-written pages in Jekyll, Hugo, Quarto
+and Obsidian. It reports the guess, says it is a guess, and prints the
+`--exclude` you would need. A wrong guess costs you a line of output, never a
+finding.
+
 A `[scan]` section appears when something could not be read: a file the
 process has no permission to open, or a CSV too long to index. Those items are
 always listed in full rather than collapsed into a count, because a file that
