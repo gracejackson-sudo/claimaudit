@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claimaudit"
+version = "0.1.0"
+description = "A first-pass audit of the claims, citations and numbers in a directory of documents. Surfaces things for a human to check."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+claimaudit = "claimaudit.cli:main"
+
+[tool.setuptools]
+packages = ["claimaudit"]
