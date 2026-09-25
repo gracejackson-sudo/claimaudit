@@ -57,6 +57,7 @@ class Index:
         self.items: list[Src] = []
         self.files: dict[str, dict] = {}      # rel -> {"name","stem","headers":{header:tokens}}
         self._keys = None
+        self.problems: list[tuple] = []       # (rel, why this file was not indexed)
 
     def add(self, value, file, where, stem=(), col=(), label=(), agg=()):
         self.items.append(Src(value, file, where, frozenset(stem), frozenset(col),
@@ -89,12 +90,20 @@ class Index:
             with open(path, encoding="utf-8-sig", errors="replace", newline="") as fh:
                 rd = csv.DictReader(fh)
                 cols = rd.fieldnames or []
-                rows = []
+                rows, truncated = [], False
                 for i, r in enumerate(rd):
                     if i >= MAX_ROWS:
+                        truncated = True
                         break
                     rows.append(r)
         except (csv.Error, OSError):
+            return
+        if truncated:
+            # Every aggregate, and the row count itself, would be computed over
+            # a partial read. Indexing it would let the tool confirm a number
+            # that is wrong, which is worse than declining to check at all.
+            self.problems.append((rel, f"has more than {MAX_ROWS:,} rows, so it was not indexed; "
+                                       f"no claim was checked against it"))
             return
         if not cols or not rows:
             return

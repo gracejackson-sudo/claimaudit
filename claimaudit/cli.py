@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse, sys
 
 from . import __version__, scan, claims as claims_mod, sources, overclaim, consistency, citations, license as lic
-from .report import render_text, render_json, FLAGGED
+from .report import render_text, render_json, Finding, FLAGGED, UNVERIFIABLE
 
 
 def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
@@ -13,19 +13,32 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
     if not os.path.exists(path):
         raise FileNotFoundError(path)
     base, text, data, bib = scan.discover(path, exclude)
-    tfiles = [(rel, p, scan.read(p)) for rel, p in text]
-    bfiles = [(rel, p, scan.read(p)) for rel, p in bib]
+    findings = []
+    tfiles, bfiles = [], []
+    for dest, group in ((tfiles, text), (bfiles, bib)):
+        for rel, p in group:
+            body, err = scan.read_safe(p)
+            if err is None:
+                dest.append((rel, p, body))
+            else:
+                findings.append(Finding("scan", UNVERIFIABLE, rel, 0,
+                                        f"could not be read, so it was not checked: {err}"))
+    if not tfiles and not bfiles:
+        findings.append(Finding("scan", FLAGGED, path, 0,
+                                "no readable documents were found here, so nothing was checked "
+                                "(claimaudit reads .md, .markdown, .txt, .tex, .rst and .bib)"))
     wanted = list(only) if only else list(lic.FREE_CHECKS + lic.PAID_CHECKS)
     skipped = [c for c in wanted if c in lic.PAID_CHECKS and not paid]
     wanted = [c for c in wanted if c not in skipped]
-    findings = []
     cl = None
     if "overclaim" in wanted:
         findings += overclaim.scan(tfiles, strict=strict)
     if "source" in wanted or "consistency" in wanted:
         cl = claims_mod.extract(tfiles)
     if "source" in wanted:
-        findings += sources.verify(cl, sources.build_index(data))
+        idx = sources.build_index(data)
+        findings += [Finding("scan", UNVERIFIABLE, rel, 0, why) for rel, why in idx.problems]
+        findings += sources.verify(cl, idx)
     if "consistency" in wanted:
         findings += consistency.check(cl)
     if "citation" in wanted:

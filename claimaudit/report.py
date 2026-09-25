@@ -41,16 +41,20 @@ def summarize(findings):
 def render_text(findings, skipped=(), show_verified=False, show_unverifiable=False):
     lines = ["claimaudit report", "=" * 60, LIMITS, ""]
     order = {FLAGGED: 0, UNVERIFIABLE: 1, VERIFIED: 2}
-    for chk in ("source", "citation", "consistency", "overclaim"):
+    for chk in ("scan", "source", "citation", "consistency", "overclaim"):
         fs = [f for f in findings if f.check == chk]
         if not fs:
             continue
         lines.append(f"[{chk}]")
         shown = trimmed = 0
+        # "scan" reports files that were never read. Collapsing those into a
+        # count would hide the fact that the audit is incomplete, so they are
+        # always listed in full.
+        always = chk == "scan"
         for f in sorted(fs, key=lambda f: (order[f.status], f.file, f.line)):
-            if f.status == VERIFIED and not show_verified:
+            if f.status == VERIFIED and not show_verified and not always:
                 continue
-            if f.status == UNVERIFIABLE and not show_unverifiable:
+            if f.status == UNVERIFIABLE and not show_unverifiable and not always:
                 continue
             if shown >= MAX_LISTED:
                 trimmed += 1
@@ -63,8 +67,9 @@ def render_text(findings, skipped=(), show_verified=False, show_unverifiable=Fal
             lines.append(f"  ... showing {shown} of {shown + trimmed} {chk} item(s); "
                          f"{trimmed} more not listed. --json gives every one.")
         lines.append("")
-    nu = sum(1 for f in findings if f.status == UNVERIFIABLE)
-    nv = sum(1 for f in findings if f.status == VERIFIED)
+    listed = [f for f in findings if f.check != "scan"]   # scan items are never collapsed
+    nu = sum(1 for f in listed if f.status == UNVERIFIABLE)
+    nv = sum(1 for f in listed if f.status == VERIFIED)
     if not show_unverifiable and nu:
         lines.append(f"{nu} UNVERIFIABLE item(s) not listed (no source to check against, or too little "
                      f"evidence to match safely); list them with --show-unverifiable.")

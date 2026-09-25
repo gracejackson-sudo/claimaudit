@@ -47,7 +47,6 @@ def offline_fetch(url, method="GET", timeout=15):
 #    saying so. These cover the same class of defect elsewhere.
 # ===================================================================
 
-@pytest.mark.xfail(strict=True, reason="row cap is silent and can endorse a wrong number")
 def test_row_cap_must_not_manufacture_a_false_verified(tmp_path, monkeypatch):
     """The worst failure this tool has: VERIFIED on a number that is wrong.
 
@@ -64,7 +63,6 @@ def test_row_cap_must_not_manufacture_a_false_verified(tmp_path, monkeypatch):
         "the file really has 400 rows; confirming 247 is worse than saying nothing")
 
 
-@pytest.mark.xfail(strict=True, reason="row cap silently corrupts every aggregate")
 def test_row_cap_must_not_corrupt_aggregates(tmp_path, monkeypatch):
     monkeypatch.setattr(sources, "MAX_ROWS", 100)
     vals = [1.2345] * 100 + [99.0] * 100          # true mean 50.11725
@@ -100,7 +98,6 @@ def test_url_cap_truncates_silently(tmp_path):
 
 @pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0,
                     reason="root can read anything")
-@pytest.mark.xfail(strict=True, reason="an unreadable file aborts the whole run")
 def test_unreadable_file_must_not_abort_the_run(tmp_path):
     d = _write(tmp_path, {"ok.md": "The first proven method.\n",
                           "locked.md": "Some 42 rows claim.\n"})
@@ -125,7 +122,6 @@ def test_corrupt_data_file_must_be_reported(tmp_path):
     assert "parse" in blob.lower() or "could not read" in blob.lower()
 
 
-@pytest.mark.xfail(strict=True, reason="scanning nothing looks exactly like a clean pass")
 def test_scanning_zero_files_must_not_look_clean(tmp_path):
     """The most dangerous UX defect: silence reading as approval.
 
@@ -135,10 +131,11 @@ def test_scanning_zero_files_must_not_look_clean(tmp_path):
     """
     d = _write(tmp_path, {"main.py": "x = 1\n", "notes.docx": "not really a docx\n"})
     findings, skipped = cli.run(d, paid=True)
-    assert not findings
-    text = render_text(findings, skipped)
-    assert "0 files" in text or "no files" in text.lower(), (
-        "an empty report must say it found nothing to read")
+    assert [f.check for f in findings] == ["scan"]
+    assert findings[0].status == FLAGGED
+    assert "nothing was checked" in render_text(findings, skipped)
+    # and it must not exit 0 as though the documents were clean
+    assert cli.main(["check", d]) == 1
 
 
 def test_symlinked_directories_are_not_followed(tmp_path):

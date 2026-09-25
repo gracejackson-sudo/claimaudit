@@ -56,3 +56,15 @@ def discover(root, exclude=()):
 def read(path):
     with open(path, encoding="utf-8", errors="replace") as fh:
         return fh.read()
+
+
+def read_safe(path):
+    """-> (text, error). error is a string when the file could not be read.
+
+    One unreadable file must not end the audit of every other file, and it
+    must not pass unmentioned either.
+    """
+    try:
+        return read(path), None
+    except OSError as e:
+        return None, e.strerror or str(e)

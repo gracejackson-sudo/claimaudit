@@ -28,6 +28,13 @@ The text report lists at most 200 items per check. When it trims, it says how
 many it is hiding, and the summary totals always count every finding. `--json`
 carries the complete set.
 
+A `[scan]` section appears when something could not be read: a file the
+process has no permission to open, or a CSV too long to index. Those items are
+always listed in full rather than collapsed into a count, because a file that
+was never read must not look like a file that passed. If no readable documents
+are found at all, that is reported and the exit code is 1 — pointing the tool
+at the wrong folder should not look like a clean result.
+
 ## Install and use
 
     pip install claimaudit
