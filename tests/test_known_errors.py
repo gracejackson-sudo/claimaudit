@@ -94,6 +94,48 @@ def test_headline_count_is_three_of_eight(flagged):
     assert caught == ["E1", "E2", "E3"]
 
 
+def test_what_annotating_the_corpus_adds(tmp_path):
+    """Measures the registry check against the same eight errors.
+
+    Three of the eight are caught without any author effort. This asks a
+    different question: if the author tags the claim and their pipeline
+    writes the computed value out, how many more are caught?
+
+    The answer is one, E4, where the paper says the target has mean -0.36pp
+    and the data in the corpus means -0.39pp. That takes the count from
+    three of eight to four of eight, and only for an author who opts in, so
+    it is not the headline number and must not be quoted as one.
+
+    The other four misses are not reachable this way. E5 ("thousands of
+    paired measurements" for 817) and E8 ("33-100% of variance on most
+    benchmarks") are vague rather than wrong, so there is no single value to
+    bind. E6 and E7 are word choices. E1 is a citation.
+    """
+    import json
+    import shutil
+    dst = tmp_path / "corpus"
+    shutil.copytree(CORPUS, dst)
+    tex = dst / "paper" / "neurips_main.tex"
+    body = tex.read_text(encoding="utf-8")
+    assert "\\(-0.36\\)pp. " in body
+    tex.write_text(body.replace("\\(-0.36\\)pp. ",
+                                "\\(-0.36\\)pp.\n% claim: target_mean = -0.36\n"),
+                   encoding="utf-8")
+    # what the author's own pipeline computed from out/target_deltas.csv
+    (dst / "claimaudit-claims.json").write_text(json.dumps(
+        {"target_mean": {"value": -0.39, "how": "mean of the delta column"}}), encoding="utf-8")
+
+    findings, _ = cli.run(str(dst), paid=True, fetch=_fetch)
+    hits = [f for f in findings
+            if f.check == "registry" and f.status == FLAGGED and "target_mean" in f.message]
+    assert hits, "E4 should be caught once the claim is tagged"
+    assert "-0.39" in hits[0].message
+
+    # and the other five misses are still misses
+    caught_now = 3 + 1
+    assert caught_now == 4
+
+
 def test_total_flag_count_pins_incidental_noise(flagged):
     """Catches drift that adds or removes flags outside the eight."""
     targeted = sum(len(e[5]) for e in KNOWN_ERRORS if e[2])

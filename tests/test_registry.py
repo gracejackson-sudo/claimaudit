@@ -87,6 +87,15 @@ def test_latex_percent_comment_annotation(tmp_path):
     assert f[0].status == VERIFIED
 
 
+def test_a_latex_tag_may_carry_a_trailing_note(tmp_path):
+    """Everything after % is comment, so people write notes there."""
+    (tmp_path / "p.tex").write_text("The mean is \\(-0.39\\)pp.\n"
+                                    "% claim: target_mean = -0.39  (mean of the delta column)\n")
+    (tmp_path / "claims.json").write_text(json.dumps({"target_mean": -0.39}))
+    f = cli.run(str(tmp_path), only=["registry"], paid=True)[0]
+    assert f[0].status == VERIFIED
+
+
 def test_unreadable_registry_is_reported_not_ignored(tmp_path):
     f = _run(tmp_path, "Built on 817<!-- claim: n_rows = 817 --> rows.\n", "{ not json")
     assert len(f) == 1 and f[0].status == FLAGGED

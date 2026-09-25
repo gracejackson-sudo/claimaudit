@@ -1,0 +1,78 @@
+# Copy to .github/workflows/claimaudit.yml
+#
+# One job blocks the build, one only reports. The split is not arbitrary.
+# Measured on a real 620-file repository:
+#
+#   registry, benchmark, seeds   0 flagged
+#   overclaim                  592 flagged
+#
+# The blocking job runs the checks that compare numbers against numbers, so
+# a failure means the arithmetic in a sentence genuinely does not hold. The
+# advisory job runs the wording and citation checks, which are worth reading
+# and wrong to gate on: overclaim is a word list over ordinary prose, and a
+# citation check fails when arXiv is having a bad day. A required check that
+# goes red for reasons nobody can fix gets marked not-required within a week.
+
+name: claimaudit
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  arithmetic:
+    name: claims and arithmetic (blocking)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install claimaudit
+
+      # These are paid checks. Without a key they are skipped and the job
+      # passes, so a fork without access to the secret is not broken by it.
+      - name: Check
+        env:
+          CLAIMAUDIT_LICENSE_KEY: ${{ secrets.CLAIMAUDIT_LICENSE_KEY }}
+        run: |
+          claimaudit check . --offline \
+            --only registry,benchmark,seeds,consistency \
+            --fail-on flagged
+
+  advisory:
+    name: wording and citations (advisory)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install claimaudit
+
+      - name: Report
+        env:
+          CLAIMAUDIT_LICENSE_KEY: ${{ secrets.CLAIMAUDIT_LICENSE_KEY }}
+        run: |
+          claimaudit check . --json --fail-on never --max-urls 40 > claimaudit.json
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d = json.load(open("claimaudit.json"))
+          c = d["counts"]
+          print("### claimaudit\n")
+          print(f"{c['flagged']} flagged, {c['unverifiable']} unverifiable, "
+                f"{c['verified']} verified\n")
+          print(d["limits"] + "\n")
+          rows = [f for f in d["findings"] if f["status"] == "FLAGGED"]
+          for f in rows[:50]:
+              print(f"- `{f['file']}:{f['line']}` **{f['check']}** {f['message']}")
+          if len(rows) > 50:
+              print(f"\n{len(rows) - 50} more in the artifact.")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: claimaudit
+          path: claimaudit.json

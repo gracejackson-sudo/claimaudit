@@ -40,8 +40,10 @@ from .report import Finding, VERIFIED, FLAGGED, UNVERIFIABLE
 NUM = r"[-\u2212+]?[0-9][0-9,]*(?:\.[0-9]+)?(?:[eE][-+][0-9]+)?"
 MD_ANN = re.compile(r"<!--\s*claim:\s*(?P<label>[^=\s][^=]*?)\s*=\s*"
                     r"(?P<val>" + NUM + r")\s*-->")
+# Everything after % is comment in LaTeX, so trailing notes are allowed:
+# "% claim: target_mean = -0.39  (mean of the delta column)" is fine.
 TEX_ANN = re.compile(r"%\s*claim:\s*(?P<label>[^=\s][^=]*?)\s*=\s*"
-                     r"(?P<val>" + NUM + r")\s*$", re.M)
+                     r"(?P<val>" + NUM + r")(?=\s|$)", re.M)
 # The prose number a tag is attached to, allowing for %, pp, units and markup.
 BEFORE = re.compile(r"(?P<num>" + NUM + r")\s*(?:%|pp|x|\u00d7)?\s*[*_`)\]]*\s*$")
 REGISTRY_NAMES = ("claimaudit-claims.json", "claimaudit-claims.csv",

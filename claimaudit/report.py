@@ -88,7 +88,22 @@ def render_text(findings, skipped=(), show_verified=False, show_unverifiable=Fal
     return "\n".join(lines)
 
 
+# Bumped only when a consumer would have to change. Adding a key is not a
+# bump; removing or renaming one is. CI configs pin behaviour to this.
+SCHEMA_VERSION = 1
+
+
+def counts(findings):
+    return {"flagged": sum(1 for f in findings if f.status == FLAGGED),
+            "unverifiable": sum(1 for f in findings if f.status == UNVERIFIABLE),
+            "verified": sum(1 for f in findings if f.status == VERIFIED),
+            "total": len(findings)}
+
+
 def render_json(findings, skipped=()):
-    return json.dumps({"limits": LIMITS, "summary": summarize(findings),
+    from . import __version__
+    return json.dumps({"schema_version": SCHEMA_VERSION, "tool_version": __version__,
+                       "limits": LIMITS, "counts": counts(findings),
+                       "summary": summarize(findings),
                        "skipped": list(skipped),
                        "findings": [asdict(f) for f in findings]}, indent=2)

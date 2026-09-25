@@ -80,7 +80,12 @@ def main(argv=None):
     c.add_argument("--strict", action="store_true", help="also flag every/all (noisy)")
     c.add_argument("--max-urls", type=int, default=60)
     c.add_argument("--exclude", action="append", default=[], help="glob to skip (repeatable); also reads .claimauditignore")
-    c.add_argument("--exit-zero", action="store_true", help="exit 0 even if findings are flagged")
+    c.add_argument("--fail-on", choices=("flagged", "unverifiable", "never"), default="flagged",
+                   help="what makes the exit code 1. 'flagged' (default) is the one to gate a "
+                        "build on. 'unverifiable' also fails when something could not be "
+                        "checked, which is strict and noisy. 'never' always exits 0")
+    c.add_argument("--exit-zero", action="store_true",
+                   help="alias for --fail-on never")
     a = sub.add_parser("activate", help="activate a license key")
     a.add_argument("key")
     sub.add_parser("status", help="show license status")
@@ -111,7 +116,11 @@ def main(argv=None):
     if skipped and not ns.json:
         print(f"tier: {t} ({msg})")
         print("buy a license: " + (lic.PURCHASE_URL or "(purchase link not configured in this build)"))
-    return 0 if ns.exit_zero or not any(f.status == FLAGGED for f in findings) else 1
+    level = "never" if ns.exit_zero else ns.fail_on
+    if level == "never":
+        return 0
+    fails = (FLAGGED, UNVERIFIABLE) if level == "unverifiable" else (FLAGGED,)
+    return 1 if any(f.status in fails for f in findings) else 0
 
 
 if __name__ == "__main__":

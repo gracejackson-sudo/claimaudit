@@ -1,0 +1,55 @@
+# Hooks for https://pre-commit.com
+#
+# Two kinds of hook, because the checks are not equally suited to blocking a
+# commit. Measured on a real 620-file repository:
+#
+#   registry, benchmark, seeds   0 flagged, 1 verified, 2.8s
+#   overclaim                  592 flagged, 1.2s
+#
+# The first group is arithmetic. When it flags something, the numbers in the
+# sentence genuinely do not agree, so failing the commit is fair. The second
+# is a word list over ordinary prose: useful to read, hopeless as a gate,
+# because a hook that is red on every commit gets passed --no-verify forever
+# and then it protects nothing.
+#
+# Both set pass_filenames: false and scan the whole folder rather than the
+# staged files. The consistency check compares numbers across documents and
+# the source check needs the data files, so handing it one changed .md in
+# isolation would report claims as unverifiable purely because the rest of
+# the repo was not there.
+
+- id: claimaudit
+  name: claimaudit (blocking, arithmetic only)
+  description: >
+    Tagged claims against the registry, and self-contained arithmetic in
+    benchmark comparisons and seed statistics. No network. These checks
+    compare numbers against numbers, so a failure means something really
+    does not add up.
+  entry: claimaudit check . --offline --only registry,benchmark,seeds --fail-on flagged
+  language: python
+  pass_filenames: false
+  always_run: true
+
+- id: claimaudit-advisory
+  name: claimaudit (advisory, never blocks)
+  description: >
+    Overclaim wording. Prints what it finds and always exits 0, because on
+    real prose this is hundreds of lines and most of them are fine.
+  entry: claimaudit check . --offline --only overclaim --fail-on never
+  language: python
+  pass_filenames: false
+  always_run: true
+  verbose: true
+
+- id: claimaudit-full
+  name: claimaudit (everything, pre-push, never blocks)
+  description: >
+    Every check, including citation resolution against arXiv and Crossref.
+    Reaches the network, so it belongs on pre-push rather than pre-commit,
+    and it is advisory: a resolver timing out is not the author's fault.
+  entry: claimaudit check . --fail-on never
+  language: python
+  pass_filenames: false
+  always_run: true
+  verbose: true
+  stages: [pre-push]
