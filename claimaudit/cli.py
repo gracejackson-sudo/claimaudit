@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse, sys
 
 from . import (__version__, scan, claims as claims_mod, sources, overclaim, consistency,
-               citations, collected, registry, license as lic)
+               citations, collected, registry, benchmarks, license as lic)
 from .report import render_text, render_json, Finding, FLAGGED, UNVERIFIABLE
 
 
@@ -44,6 +44,8 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
         findings += consistency.check(cl)
     if "citation" in wanted:
         findings += citations.check(tfiles, bfiles, fetch=fetch, offline=offline, max_urls=max_urls)
+    if "benchmark" in wanted:
+        findings += benchmarks.check(tfiles)
     if "registry" in wanted:
         reg = registry.discover(base, registry_path)
         if reg:
@@ -65,7 +67,8 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("check", help="audit a directory or file")
     c.add_argument("path")
-    c.add_argument("--only", help="comma list: overclaim,source,citation,consistency,registry")
+    c.add_argument("--only", help="comma list: overclaim,source,citation,"
+                                  "consistency,registry,benchmark")
     c.add_argument("--registry", help="claim registry (JSON or CSV); default: "
                                       "claimaudit-claims.json/.csv or claims.json/.csv in the folder")
     c.add_argument("--json", action="store_true")
