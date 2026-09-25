@@ -301,3 +301,13 @@ def test_named_file_rescues_value_without_word_overlap(tmp_path):
     (tmp_path / "a.md").write_text("Per x2_9.csv, the peak was 121.\n")
     g, _ = cli.run(d, only=["source"], paid=True)
     assert g[0].status == FLAGGED
+
+
+def test_default_report_shows_unverifiable_count_not_list(tmp_path, capsys):
+    (tmp_path / "a.md").write_text("Latency fell by 12.5% after the change.\n")
+    cli.run(str(tmp_path), only=["overclaim"], paid=True)
+    from claimaudit.report import render_text
+    f, _ = cli.run(str(tmp_path), only=["source"], paid=True)
+    txt = render_text(f)
+    assert "1 UNVERIFIABLE item(s) not listed" in txt and "12.5%" not in txt.split("summary")[0]
+    assert "12.5%" in render_text(f, show_unverifiable=True)

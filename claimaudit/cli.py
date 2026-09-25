@@ -62,6 +62,8 @@ def main(argv=None):
     t, msg = lic.tier()
     if ns.cmd == "status":
         print(f"tier: {t} ({msg})")
+        if t == "free":
+            print("buy a license: " + (lic.PURCHASE_URL or "(purchase link not configured in this build)"))
         return 0
     only = [x.strip() for x in ns.only.split(",")] if ns.only else None
     bad = [x for x in (only or []) if x not in lic.FREE_CHECKS + lic.PAID_CHECKS]
@@ -76,6 +78,7 @@ def main(argv=None):
     print(render_json(findings, skipped) if ns.json else render_text(findings, skipped, ns.show_verified, ns.show_unverifiable))
     if skipped and not ns.json:
         print(f"tier: {t} ({msg})")
+        print("buy a license: " + (lic.PURCHASE_URL or "(purchase link not configured in this build)"))
     return 0 if ns.exit_zero or not any(f.status == FLAGGED for f in findings) else 1
 
 

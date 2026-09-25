@@ -8,6 +8,7 @@ import json, os, socket, time, urllib.parse, urllib.request, urllib.error
 
 API = "https://api.lemonsqueezy.com/v1/licenses"
 PRODUCT_ID = None      # set to the numeric Lemon Squeezy product id before release
+PURCHASE_URL = None    # set to the Lemon Squeezy checkout URL before release
 GRACE_DAYS = 7
 PAID_CHECKS = ("source", "citation", "consistency")
 FREE_CHECKS = ("overclaim",)

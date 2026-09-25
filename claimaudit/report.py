@@ -51,8 +51,14 @@ def render_text(findings, skipped=(), show_verified=False, show_unverifiable=Fal
             if f.evidence:
                 lines.append(f"               {f.evidence}")
         lines.append("")
-    lines.append("(VERIFIED and UNVERIFIABLE items are counted below; list them with "
-                 "--show-verified / --show-unverifiable, or use --json)")
+    nu = sum(1 for f in findings if f.status == UNVERIFIABLE)
+    nv = sum(1 for f in findings if f.status == VERIFIED)
+    if not show_unverifiable and nu:
+        lines.append(f"{nu} UNVERIFIABLE item(s) not listed (no source to check against, or too little "
+                     f"evidence to match safely); list them with --show-unverifiable.")
+    if not show_verified and nv:
+        lines.append(f"{nv} VERIFIED item(s) not listed; list them with --show-verified.")
+    lines.append("")
     lines.append("summary")
     for chk, c in summarize(findings).items():
         lines.append(f"  {chk:<12} verified {c[VERIFIED]:>4}   flagged {c[FLAGGED]:>4}"
