@@ -52,10 +52,11 @@
   </li>
   <li>
     <strong>Fifteen third-party ML papers, the free <code>overclaim</code> check:</strong>
-    after the latest changes, flags fell from 670 to 110. Of 60 sampled flags, 3 were
-    correct, which is <strong>5% precision</strong>. A sample of 60 cannot distinguish
-    that from the 1.7% measured before those changes. Most of what it flags is fine.
-    Treat its output as a reading list, not a verdict.
+    after tightening the priority and superiority patterns so they fire only on the
+    construction, flags fell from 670 to 110. Of 60 sampled flags, 3 were correct, which
+    is <strong>5% precision</strong>. A sample of 60 cannot distinguish that from the
+    1.7% measured before that tightening. Most of what it flags is fine. Treat its
+    output as a reading list, not a verdict.
   </li>
 </ul>
 
@@ -101,11 +102,14 @@ claimaudit status</pre>
 
 <h2>How the license works</h2>
 <p>
-  It is an <strong>honor system</strong>. The key is a shared token shown to you after
-  purchase, not a cryptographic license. <code>claimaudit activate</code> stores it on
-  your machine and sends nothing anywhere. Any non-empty key unlocks the paid checks,
-  and no server ever checks it. Anyone who reads the code can bypass it. If the tool is
-  useful to you, please pay for it.
+  The code is <a href="https://github.com/gracejackson-sudo/claimaudit/blob/main/LICENSE">MIT-licensed</a>.
+  The key is an honor-system convenience, not a legal condition of use.
+</p>
+<p>
+  The key is a shared token shown to you after purchase, not a cryptographic license.
+  <code>claimaudit activate</code> stores it on your machine and sends nothing anywhere.
+  Any non-empty key unlocks the paid checks, and no server ever checks it. Anyone who
+  reads the code can bypass it. If the tool is useful to you, please pay for it.
 </p>
 
 <h2>Limitations</h2>
