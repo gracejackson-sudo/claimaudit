@@ -44,7 +44,63 @@ def summarize(findings, ran=()):
     return out
 
 
-def render_text(findings, skipped=(), show_verified=False, show_unverifiable=False, ran=()):
+# Rank per FLAGGED finding for --top: lower means "show this first". The order
+# is not "how likely the tool is right" -- every FLAGGED is a prompt to review,
+# not a verdict. It is "how likely a reader will find something real by looking
+# at this one over the others", based on which patterns rest on numeric or
+# bibliographic evidence (rare and specific, so worth attention) versus which
+# rest on word matches over ordinary prose (common and noisy).
+#
+# scan findings sit at the top because a file that was never audited is not a
+# clean file, and the reader needs to know that first. UNVERIFIABLE and
+# VERIFIED items are not surfaced by --top at all; the summary line and
+# --show-unverifiable / --show-verified stay the way to reach them.
+_TIER_A = 10   # numeric / bibliographic mismatches: the check earned this flag
+_TIER_B = 30   # citation resolution failures: worth a look but off-site
+_TIER_C = 50   # overclaim wording: pattern match over prose
+_SCAN_UNREAD = 5
+
+
+def _priority(f):
+    """-> integer priority. Lower is higher priority in --top."""
+    if f.status != FLAGGED:
+        return 1000
+    check = f.check
+    msg = f.message.lower()
+    if check == "scan":
+        return _SCAN_UNREAD
+    if check == "consistency":
+        return _TIER_A
+    if check == "benchmark":
+        return _TIER_A + 1
+    if check == "seeds":
+        return _TIER_A + 2
+    if check == "citation" and any(k in msg for k in ("authors differ", "title differs",
+                                                       "does not match")):
+        return _TIER_A + 3
+    if check == "registry" and "the text says" in msg:
+        return _TIER_A + 4
+    if check == "source":
+        return _TIER_A + 5
+    if check == "support" and "contradicted" in msg:
+        return _TIER_A + 6
+    if check == "citation" and any(k in msg for k in ("url is dead", "not found",
+                                                       "does not resolve")):
+        return _TIER_B
+    if check == "registry" and "missing from" in msg:
+        return _TIER_B + 1
+    if check == "overclaim":
+        return _TIER_C + (10 if "(negated)" in f.message else 0)
+    return _TIER_B + 5
+
+
+def render_text(findings, skipped=(), show_verified=False, show_unverifiable=False, ran=(), top=None):
+    """Text report. When `top` is set, only the top-N FLAGGED findings are
+    listed (scan findings included so unread files are never hidden). The
+    LIMITS banner and the summary counts still appear so the reader never
+    loses the whole shape of the run."""
+    if top is not None:
+        return _render_top(findings, skipped, ran, top)
     lines = ["claimaudit report", "=" * 60, LIMITS, ""]
     order = {FLAGGED: 0, UNVERIFIABLE: 1, VERIFIED: 2}
     for chk in ("scan", "registry", "benchmark", "seeds", "source", "citation", "support",
@@ -92,6 +148,69 @@ def render_text(findings, skipped=(), show_verified=False, show_unverifiable=Fal
                      f"list them with --show-unverifiable.")
     if not show_verified and nv:
         lines.append(f"{nv} VERIFIED item(s) not listed; list them with --show-verified.")
+    lines.append("")
+    lines.append("summary")
+    counted = summarize(findings, ran)
+    for chk, c in counted.items():
+        lines.append(f"  {chk:<12} verified {c[VERIFIED]:>4}   flagged {c[FLAGGED]:>4}"
+                     f"   unverifiable {c[UNVERIFIABLE]:>4}")
+    if not counted:
+        lines.append("  (no check ran)")
+    if skipped:
+        lines.append("")
+        lines.append("skipped (license required): " + ", ".join(skipped))
+    return "\n".join(lines)
+
+
+def _render_top(findings, skipped, ran, top):
+    """The --top preview: scan section, then a ranked list of the most-signal
+    FLAGGED findings, then the same summary the full report ends with."""
+    lines = ["claimaudit report (preview: top " + str(top) + ")",
+             "=" * 60, LIMITS, ""]
+
+    scan_findings = [f for f in findings
+                     if f.check == "scan" and f.status in (FLAGGED, UNVERIFIABLE)]
+    if scan_findings:
+        lines.append("[scan]")
+        for f in sorted(scan_findings, key=lambda f: (f.file, f.line)):
+            loc = f"{f.file}:{f.line}  " if f.file else ""
+            lines.append(f"  {f.status:<12} {loc}{f.message}")
+            if f.evidence:
+                lines.append(f"               {f.evidence}")
+        lines.append("")
+
+    flagged = [f for f in findings if f.status == FLAGGED and f.check != "scan"]
+    ranked = sorted(flagged, key=lambda f: (_priority(f), f.check, f.file, f.line))
+    shown = ranked[:top] if top > 0 else []
+    hidden = len(ranked) - len(shown)
+
+    if shown:
+        lines.append(f"[top {len(shown)} flagged — most likely to warrant a look]")
+        for f in shown:
+            loc = f"{f.file}:{f.line}  " if f.file else ""
+            lines.append(f"  {f.check:<12} {loc}{f.message}")
+            if f.evidence:
+                lines.append(f"               {f.evidence}")
+        lines.append("")
+    else:
+        lines.append("[top]  no FLAGGED findings.")
+        lines.append("")
+
+    if hidden > 0:
+        lines.append(f"{hidden} more flagged finding(s) not shown here; "
+                     f"drop --top for the full report or --json for every one.")
+
+    non_scan = [f for f in findings if f.check != "scan"]
+    nu = sum(1 for f in non_scan if f.status == UNVERIFIABLE)
+    nv = sum(1 for f in non_scan if f.status == VERIFIED)
+    parts = []
+    if nu:
+        parts.append(f"{nu} UNVERIFIABLE")
+    if nv:
+        parts.append(f"{nv} VERIFIED")
+    if parts:
+        lines.append("also this run: " + ", ".join(parts) + " (not surfaced by --top).")
+
     lines.append("")
     lines.append("summary")
     counted = summarize(findings, ran)

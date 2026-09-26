@@ -149,6 +149,13 @@ def main(argv=None):
     c.add_argument("--json", action="store_true")
     c.add_argument("--show-verified", action="store_true")
     c.add_argument("--show-unverifiable", action="store_true")
+    c.add_argument("--top", type=int, default=None, metavar="N",
+                   help="preview mode: show only the top N FLAGGED findings, ranked by which are "
+                        "most likely to be worth a look (numeric and bibliographic mismatches first, "
+                        "overclaim wording last, negated overclaim last of all). Scan-level unread "
+                        "files always appear so a skipped file never looks like a clean one. "
+                        "Useful on a first run over a large repo. Text output only; --json still "
+                        "carries every finding")
     c.add_argument("--offline", action="store_true", help="skip network lookups")
     c.add_argument("--strict", action="store_true", help="also flag every/all (noisy)")
     c.add_argument("--max-urls", type=int, default=60)
@@ -199,6 +206,11 @@ def main(argv=None):
     bad = [x for x in (only or []) if x not in lic.FREE_CHECKS + lic.PAID_CHECKS]
     if bad:
         return fail(f"unknown check(s): {bad}")
+    if ns.top is not None and ns.top < 0:
+        return fail("--top must be zero or a positive integer")
+    if ns.top is not None and ns.json:
+        return fail("--top and --json describe different reports; --json already carries every "
+                    "finding. Drop one of the two.")
     try:
         usage = {}
         if ns.llm and not (only and "support" in only):
@@ -222,7 +234,8 @@ def main(argv=None):
     wanted = requested_checks(only)
     ran = [c for c in wanted if c not in skipped]
     print(render_json(findings, skipped, ran) if ns.json
-          else render_text(findings, skipped, ns.show_verified, ns.show_unverifiable, ran))
+          else render_text(findings, skipped, ns.show_verified, ns.show_unverifiable, ran,
+                           top=ns.top))
     if skipped and not ns.json:
         print(f"tier: {t} ({msg})")
         print("buy a license: " + (lic.PURCHASE_URL or "(purchase link not configured in this build)"))
