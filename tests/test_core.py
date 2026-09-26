@@ -225,41 +225,56 @@ def _home(tmp_path, monkeypatch):
     monkeypatch.delenv("CLAIMAUDIT_LICENSE_KEY", raising=False)
 
 
-def post_factory(resp, status=200, calls=None):
-    def p(endpoint, fields, timeout=15):
-        if calls is not None:
-            calls.append((endpoint, dict(fields)))
-        return status, resp
-    return p
+@pytest.fixture
+def no_network(monkeypatch):
+    import socket, urllib.request
+    def refuse(*a, **kw):
+        raise AssertionError("the license gate must not touch the network")
+    monkeypatch.setattr(urllib.request, "urlopen", refuse)
+    monkeypatch.setattr(socket, "create_connection", refuse)
+    monkeypatch.setattr(socket, "gethostname", refuse)
 
 
-def test_free_without_key():
-    assert lic.tier(post=post_factory({}))[0] == "free"
+def test_free_without_key(no_network):
+    assert lic.tier()[0] == "free"
 
 
-def test_activate_then_cached_paid_without_network(monkeypatch):
-    calls = []
-    ok = {"activated": True, "instance": {"id": "i1"}, "meta": {"product_id": 7}, "license_key": {"status": "active"}}
-    assert lic.activate("K", post=post_factory(ok, calls=calls))[0]
-    assert lic.tier(post=post_factory({}, calls=calls))[0] == "paid"
-    assert [c[0] for c in calls] == ["activate"]        # second call served from cache
+def test_activate_stores_key_locally_and_unlocks(no_network, tmp_path):
+    ok, msg = lic.activate("  K-123  ")
+    assert ok and "no server" in msg
+    stored = json.load(open(tmp_path / "home" / "license.json"))
+    assert stored["key"] == "K-123" and set(stored) == {"key", "stored_at"}
+    assert lic.tier()[0] == "paid"
 
 
-def test_wrong_product_and_invalid_key_rejected(monkeypatch):
-    monkeypatch.setattr(lic, "PRODUCT_ID", 7)
-    bad = {"activated": True, "meta": {"product_id": 99}, "license_key": {"status": "active"}}
-    assert not lic.activate("K", post=post_factory(bad))[0]
-    assert not lic.activate("K", post=post_factory({"valid": False, "error": "license_key not found"}, 404))[0]
+def test_env_key_unlocks_without_a_stored_file(no_network, monkeypatch):
+    monkeypatch.setenv("CLAIMAUDIT_LICENSE_KEY", "K")
+    assert lic.tier()[0] == "paid"
 
 
-def test_revalidate_offline_grace_and_expiry():
-    ok = {"activated": True, "instance": {"id": "i1"}, "license_key": {"status": "active"}}
-    lic.activate("K", post=post_factory(ok), now=lambda: 1000.0)
-    day = 86400
-    assert lic.tier(post=post_factory({}, 0), now=lambda: 1000.0 + 3 * day)[0] == "paid"
-    assert lic.tier(post=post_factory({}, 0), now=lambda: 1000.0 + 9 * day)[0] == "free"
-    dead = {"valid": True, "license_key": {"status": "disabled"}}
-    assert lic.tier(post=post_factory(dead), now=lambda: 1000.0 + 3 * day)[0] == "free"
+def test_empty_or_blank_key_does_not_unlock(no_network, monkeypatch, tmp_path):
+    assert not lic.activate("")[0]
+    assert not lic.activate("   \n")[0]
+    assert lic.tier()[0] == "free"
+    monkeypatch.setenv("CLAIMAUDIT_LICENSE_KEY", "  ")
+    assert lic.tier()[0] == "free"
+    (tmp_path / "home" / "license.json").write_text('{"key": ""}')
+    assert lic.tier()[0] == "free"
+    (tmp_path / "home" / "license.json").write_text("not json")
+    assert lic.tier()[0] == "free"
+
+
+def test_no_lemon_squeezy_left_and_purchase_url_is_the_one_placeholder():
+    import inspect
+    src = inspect.getsource(lic).lower()
+    assert "lemonsqueezy" not in src and "lemon squeezy" not in src
+    assert not hasattr(lic, "PRODUCT_ID")
+    assert lic.PURCHASE_URL.startswith("https://buy.stripe.com/")
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for rel in ("README.md", os.path.join("docs", "index.html")):
+        text = open(os.path.join(root, rel), encoding="utf-8").read()
+        assert lic.PURCHASE_URL in text, rel
+        assert "lemon" not in text.lower(), rel
 
 
 # ------------------------------------------------------------- cli

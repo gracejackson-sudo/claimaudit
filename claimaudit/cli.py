@@ -133,14 +133,14 @@ def main(argv=None):
                         "to run, look like a pass")
     c.add_argument("--exit-zero", action="store_true",
                    help="alias for --fail-on never")
-    a = sub.add_parser("activate", help="activate a license key")
+    a = sub.add_parser("activate", help="store a license key locally (no server check)")
     a.add_argument("key")
     sub.add_parser("status", help="show license status")
     ns = ap.parse_args(argv)
 
     if ns.cmd == "activate":
         ok, msg = lic.activate(ns.key)
-        print(("activated" if ok else f"activation failed: {msg}"))
+        print((f"activated: {msg}" if ok else f"activation failed: {msg}"))
         return 0 if ok else 2
     t, msg = lic.tier()
     if ns.cmd == "status":

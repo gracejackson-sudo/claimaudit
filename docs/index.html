@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>claimaudit — a first-pass checker for claims, numbers and citations</title>
+<style>
+  body { font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+         max-width: 44rem; margin: 2.5rem auto; padding: 0 1.25rem; color: #1d1d1f; background: #fff; }
+  h1 { font-size: 1.7rem; margin-bottom: .2rem; }
+  h1 + p { margin-top: 0; color: #555; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid #e3e3e3; padding-bottom: .25rem; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .92em; }
+  pre { background: #f5f5f7; padding: .8rem 1rem; overflow-x: auto; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; vertical-align: top; padding: .35rem .5rem; border-bottom: 1px solid #eee; }
+  th { font-weight: 600; }
+  .buy { display: inline-block; padding: .55rem 1.1rem; background: #1d1d1f; color: #fff;
+         text-decoration: none; border-radius: 4px; }
+  .placeholder-note { display: none; margin-top: .6rem; padding: .5rem .75rem;
+                      background: #fff4d6; border: 1px solid #e0b84c; border-radius: 4px; }
+  /* Shown only while the link above still points at the placeholder. */
+  a[href*="REPLACE_ME"] ~ .placeholder-note { display: block; }
+  footer { margin-top: 3rem; color: #777; font-size: .9rem; }
+</style>
+</head>
+<body>
+
+<h1>claimaudit</h1>
+<p>A first-pass checker for the claims, numbers and citations in a folder of documents.</p>
+
+<h2>What it is</h2>
+<p>
+  claimaudit reads the Markdown, LaTeX, text, BibTeX, notebook and Word files in a
+  folder and lists sentences a person should look at: wording such as "we are the
+  first" or "proven", numbers that do not match the data files beside them or
+  disagree between documents, citations that do not resolve, and arithmetic in a
+  sentence that does not add up. It does not decide whether anything is true, and
+  it will miss most of what a careful reader would catch. It runs locally, uses
+  only the Python standard library, and uploads nothing.
+</p>
+
+<h2>What it has been measured to do</h2>
+<p>These are small samples. They are reported as they came out, not rounded up.</p>
+<ul>
+  <li>
+    <strong>Frozen corpus of eight known errors: it catches 3 of 8.</strong>
+    It reaches <strong>4 of 8 only if the author tags claims and supplies a registry</strong>
+    of the values their own pipeline computed. The original replay cannot be re-run;
+    a reconstruction of the eight errors is checked in with tests to catch drift,
+    not as independent evidence.
+  </li>
+  <li>
+    <strong>Fifteen third-party ML papers, the free <code>overclaim</code> check:</strong>
+    after the latest changes, flags fell from 670 to 110. Of 60 sampled flags, 3 were
+    correct, which is <strong>5% precision</strong>. A sample of 60 cannot distinguish
+    that from the 1.7% measured before those changes. Most of what it flags is fine.
+    Treat its output as a reading list, not a verdict.
+  </li>
+</ul>
+
+<h2>Free and paid</h2>
+<table>
+  <tr><th>Check</th><th>What it does</th><th>Tier</th></tr>
+  <tr><td><code>overclaim</code></td><td>Flags priority, universal-negative, proof and absolute-superlative wording for you to review.</td><td>Free</td></tr>
+  <tr><td><code>source</code></td><td>Looks for a matching value for numeric claims in CSV/JSON files in the same folder.</td><td>Paid</td></tr>
+  <tr><td><code>citation</code></td><td>Checks that arXiv IDs, DOIs and URLs resolve; compares <code>.bib</code> authors and titles with arXiv / Crossref.</td><td>Paid</td></tr>
+  <tr><td><code>consistency</code></td><td>Flags similar sentences in different files that state different numbers.</td><td>Paid</td></tr>
+  <tr><td><code>registry</code></td><td>Checks numbers you tagged in the text against a registry your own pipeline wrote.</td><td>Paid</td></tr>
+  <tr><td><code>benchmark</code></td><td>Checks that a stated gain matches the two numbers it is stated between.</td><td>Paid</td></tr>
+  <tr><td><code>seeds</code></td><td>Checks that a stated mean, spread and seed count can describe the same runs.</td><td>Paid</td></tr>
+</table>
+
+<h2>Buy a license key</h2>
+<p>
+  <!-- STRIPE PAYMENT LINK: replace the href on the next line. One line. Same string in claimaudit/license.py and README.md. -->
+  <a class="buy" href="https://buy.stripe.com/REPLACE_ME">Pay with Stripe</a>
+  <span class="placeholder-note">Replace this with the Stripe Payment Link. One line.</span>
+</p>
+<p>
+  After payment, your license key and install instructions are sent <strong>by email,
+  by hand</strong>. This is not instant and not automated; expect a delay while someone
+  reads the order and replies.
+</p>
+
+<h2>Install</h2>
+<p>
+  claimaudit is <strong>not on PyPI</strong>; <code>pip install claimaudit</code> will not
+  find it. Install from a copy of the source folder (buyers get one with their install
+  email). Python 3.9 or newer, no dependencies:
+</p>
+<pre>cd claimaudit
+python3 -m pip install -e .
+claimaudit check path/to/folder</pre>
+<p>If the <code>claimaudit</code> script is not on your <code>PATH</code>, this does the same thing:</p>
+<pre>python3 -m claimaudit check path/to/folder</pre>
+<p>To unlock the paid checks once your key arrives:</p>
+<pre>claimaudit activate YOUR-KEY
+claimaudit status</pre>
+<p>In CI, set <code>CLAIMAUDIT_LICENSE_KEY</code> in the environment instead.</p>
+
+<h2>How the license works</h2>
+<p>
+  It is an <strong>honor system</strong>. The key is a token emailed to you after
+  purchase, not a cryptographic license. <code>claimaudit activate</code> stores it on
+  your machine and sends nothing anywhere. Any non-empty key unlocks the paid checks,
+  and no server ever checks it. Anyone who reads the code can bypass it. If the tool is
+  useful to you, please pay for it.
+</p>
+
+<h2>Limitations</h2>
+<ul>
+  <li><strong>Precision over recall.</strong> It stays quiet unless it has something to compare against, so it misses far more than it flags.</li>
+  <li><strong>Honor-system license.</strong> No server validates the key.</li>
+  <li><strong>No license server and no telemetry.</strong> The only network requests are the citation lookups (arXiv, Crossref, and URLs in your documents), and <code>--offline</code> turns those off.</li>
+  <li><strong>No LLM layer.</strong> Nothing here uses a language model to judge meaning.</li>
+  <li><strong>It treats all prose as the author's voice.</strong> Quoted text, prompt exemplars, dataset rows and model-generated samples are audited as if the author asserted them, so they can be flagged. Use <code>--exclude</code> on those files.</li>
+  <li><strong>PDFs are not read.</strong> Text inside a PDF pulled in with <code>\includepdf</code> is not read; the tool says so rather than reporting a clean result.</li>
+  <li><strong>The citation check resolves identifiers.</strong> It does not check that the cited paper supports the sentence citing it.</li>
+</ul>
+
+<footer>claimaudit 0.1.0. No build step: this page is one HTML file.</footer>
+
+</body>
+</html>

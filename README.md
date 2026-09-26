@@ -51,8 +51,17 @@ at the wrong folder should not look like a clean result.
 
 ## Install and use
 
-    pip install claimaudit
+claimaudit is **not on PyPI**; `pip install claimaudit` will not find it.
+Install from a copy of this source folder (Python 3.9 or newer, no
+dependencies):
+
+    cd claimaudit
+    python3 -m pip install -e .
     claimaudit check path/to/folder
+
+`python3 -m claimaudit check path/to/folder` does the same thing if the
+`claimaudit` script is not on your `PATH`. More examples:
+
     claimaudit check paper.tex --only overclaim
     claimaudit check . --exclude 'data/*' --json
 
@@ -205,15 +214,35 @@ either way. If a test is named, nothing is said at all.
 ## Privacy
 
 Files are read locally and never uploaded. Network requests go only to arXiv,
-Crossref, the URLs found in your documents, and the license server. There is
-no telemetry. Citation lookups are cached in `~/.cache/claimaudit`.
+Crossref and the URLs found in your documents, and only from the `citation`
+check (`--offline` turns them off). There is no license server and no
+telemetry. Citation lookups are cached in `~/.cache/claimaudit`.
 
 ## Licensing
 
 The `overclaim` check is free. `source`, `citation`, `consistency`, `registry`,
-`benchmark` and `seeds` need a license key (`claimaudit activate <KEY>`), validated against Lemon Squeezy and
-cached for offline use for up to 7 days. This is an honor-system gate: it runs
-in readable Python on your machine and is not tamper-proof.
+`benchmark` and `seeds` need a license key. The landing page is
+[`docs/index.html`](docs/index.html).
+
+To buy, pay through the Stripe Payment Link:
+
+<!-- Replace this with the Stripe Payment Link. One line. Same string in claimaudit/license.py and docs/index.html. -->
+https://buy.stripe.com/REPLACE_ME
+
+The key and install instructions arrive **by email, sent by hand** after the
+payment comes through. It is not instant. Then:
+
+    claimaudit activate <KEY>
+
+That writes the key to `~/.claimaudit/license.json` (or `$CLAIMAUDIT_HOME`).
+Setting `CLAIMAUDIT_LICENSE_KEY` in the environment works too, which is what
+CI uses. `claimaudit status` shows which tier you are on.
+
+**This is an honor system.** The key is a token the seller emails you, not a
+cryptographic license. Any non-empty key unlocks the paid checks; an empty or
+all-whitespace key does not. Nothing is checked against a server — `activate`
+stores the key and sends nothing anywhere, and no check ever phones home.
+Anyone who reads the code can bypass it.
 
 ## Not in v0.1
 
