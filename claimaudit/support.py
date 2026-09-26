@@ -36,7 +36,7 @@ from dataclasses import dataclass, field
 from . import fulltext as ft
 from . import citations as cit
 from .claims import extract_numbers
-from .report import Finding, FLAGGED, UNVERIFIABLE
+from .report import Finding, VERIFIED, FLAGGED, UNVERIFIABLE
 
 # ------------------------------------------------------------------ parsing
 CITE_TEX = re.compile(r"\\(cite[a-zA-Z]*)\*?\s*(?:\[[^\]]*\]\s*){0,2}\{([^}]*)\}")
@@ -144,6 +144,7 @@ class Pair:
     attributive: bool
     marked: str = ""              # cleaned sentence with citation markers, for term/number analysis
     bib_authors: list = field(default_factory=list)
+    context: str = ""             # the sentence before, for 'Their matrix ...' style references
 
 
 def bib_identifier(entry):
@@ -156,6 +157,9 @@ def bib_identifier(entry):
         return "arxiv:" + m.group(1)
     if f.get("doi"):
         return "doi:" + f["doi"].strip()
+    u = f.get("url") or (cit.URL_RX.search(f.get("note", "")).group(0) if cit.URL_RX.search(f.get("note", "")) else "")
+    if u.startswith("http"):
+        return "url:" + u.rstrip(".,;)")
     return None
 
 
@@ -193,7 +197,10 @@ def find_pairs(text_files, bib_files):
         is_md = low.endswith((".md", ".markdown", ".txt", ".rst"))
         if not (is_tex or is_md):
             continue
+        prev = ""
         for line, raw in _split_sentences(text):
+            before, prev = prev, (_clean_tex(raw) if is_tex else _clean_md(raw)[0])
+            before = re.sub(r"\u27e6C:[^\u27e7]*\u27e7|\u27e8M\u27e9", "", before).strip()
             if is_tex:
                 if not CITE_TEX.search(raw):
                     continue
@@ -223,7 +230,7 @@ def find_pairs(text_files, bib_files):
             display = re.sub(r"\u27e6C:[^\u27e7]*\u27e7", "", marked)
             display = re.sub(r"\s+", " ", display).strip()
             pairs.append(Pair(rel, line, display, idents, keys, textual, named, attributive, marked,
-                              [a for b in bauth for a in b]))
+                              [a for b in bauth for a in b], before))
     return pairs
 
 
@@ -453,7 +460,7 @@ def assess(pair, sources, attributed=frozenset(), names=None):
         ids = ", ".join(s.ident.split(":", 1)[1] for s in real)
         return FLAGGED, f"cited source ({ids}): " + "; ".join(flags), ev
     if len(real) < len(sources):
-        why = "a cited item has no arXiv id or DOI, so it could not be looked up"
+        why = "a cited item has no arXiv id, DOI or URL, so it could not be looked up"
     elif not all_trusted:
         why = "the full text could not be read and self-checked (" + _tier_note(real) + ")"
     else:
@@ -609,11 +616,18 @@ class NetworkProvider:
                                     for a in msg.get("author", []) if a.get("family")],
                                    int(year), re.sub(r"\s+", " ", abst).strip(),
                                    note="full text of DOI-only sources is not fetched")
-        return ft.Source(ident, note="not an arXiv id or DOI")
+        if kind == "url":
+            st, data, trunc = self.get_bytes(val)
+            if st != 200 or not data:
+                return ft.Source(ident, note=f"page unavailable (status {st})")
+            if trunc:
+                return ft.Source(ident, note="page larger than the download limit, so it was not used")
+            return ft.build_web_source(ident, data.decode("utf-8", "replace"))
+        return ft.Source(ident, note="not an arXiv id, DOI or web page")
 
 
 # ------------------------------------------------------------------ check
-def check(text_files, bib_files, provider=None, offline=False, max_sources=60):
+def check(text_files, bib_files, provider=None, offline=False, max_sources=60, judge=None):
     pairs = find_pairs(text_files, bib_files)
     if not pairs:
         return []
@@ -640,7 +654,35 @@ def check(text_files, bib_files, provider=None, offline=False, max_sources=60):
             else:
                 srcs.append(provider(i))
         status, msg, ev = assess(p, srcs, attributed.get(p.file, frozenset()), names)
-        out.append(Finding("support", status, p.file, p.line, msg, ev,
-                           {"sources": {s.ident: {"tier": s.tier, "trusted": s.trusted, "note": s.note}
-                                        for s in srcs if s is not None}}))
+        extra = {"sources": {s.ident: {"tier": s.tier, "trusted": s.trusted, "note": s.note}
+                             for s in srcs if s is not None}}
+        if judge is not None and status == UNVERIFIABLE:
+            status, msg, ev, more = _judged(judge, p, srcs, status, msg, ev)
+            extra.update(more)
+        out.append(Finding("support", status, p.file, p.line, msg, ev, extra))
     return out
+
+
+def _judged(judge, pair, srcs, status, msg, ev):
+    """Layer B for one sentence whose Layer A answer was UNVERIFIABLE. Returns
+    (status, message, evidence, extra). Only a single, fully read source is judged;
+    everything else keeps its Layer A answer and says why it was not judged."""
+    from . import judge as jd
+    if len(srcs) != 1 or srcs[0] is None:
+        return status, msg + "; not judged (the sentence cites several sources, or none that could be looked up)", ev, {}
+    s = srcs[0]
+    if not (s.trusted and s.text):
+        return status, msg + "; not judged (the source's full text was not available and self-checked)", ev, {}
+    if not judge.budget_left():
+        return status, msg + f"; not judged (the limit of {judge.max_calls} model calls was reached)", ev, {}
+    v = judge.judge(pair, s)
+    more = {"verdict": v.verdict, "quote": v.quote, "excerpt": v.excerpt, "reason": v.reason,
+            "note": v.note, "model": judge.client.model, "windows": v.windows}
+    sid = s.ident.split(":", 1)[1]
+    if v.verdict == jd.SUPPORTED:
+        return (VERIFIED, f"SUPPORTED by a quoted passage of {sid} (model-judged; a receipt to check, not a proof): {v.reason}",
+                f"{ev}  <-  \u201c{v.quote}\u201d", more)
+    if v.verdict == jd.CONTRADICTED:
+        return (FLAGGED, f"CONTRADICTED by a quoted passage of {sid}: {v.reason}", f"{ev}  vs  \u201c{v.quote}\u201d", more)
+    why = v.note or v.reason or "the passages shown neither support nor contradict it"
+    return UNVERIFIABLE, f"UNCLEAR \u2014 NEEDS HUMAN REVIEW ({sid}): {why}", ev, more

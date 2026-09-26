@@ -118,6 +118,12 @@ class TestHtml:
         body, refs = ft.html_to_text(self.PAGE)
         assert "Vovk" in refs and "Vovk" not in body
 
+    def test_a_bare_number_typeset_as_math_survives_even_when_math_is_dropped(self):
+        page = ('<div class="ltx_page_content"><p>a calibrated <math alttext="90\\%"><mn>90</mn></math> interval and '
+                '<math alttext="\\alpha=0.1"><mi>a</mi></math> here</p></div>')
+        body, _ = ft.html_to_text(page, keep_math=False)
+        assert "90%" in body and "alpha" not in body
+
     def test_math_can_be_dropped(self):
         assert "alpha" in ft.html_to_text(self.PAGE)[0]
         assert "alpha" not in ft.html_to_text(self.PAGE, keep_math=False)[0]
@@ -216,8 +222,13 @@ class TestFindPairs:
 
     def test_key_without_identifier_is_kept_as_none(self):
         tf = [("p.tex", "p.tex", "See~\\cite{blog} for it.")]
-        bf = [("r.bib", "r.bib", "@misc{blog, title={x}, note={\\url{https://example.org/a}}}")]
+        bf = [("r.bib", "r.bib", "@misc{blog, title={x}, author={Doe, J}}")]
         assert support.find_pairs(tf, bf)[0].idents == [None]
+
+    def test_key_with_only_a_url_becomes_a_web_source(self):
+        tf = [("p.tex", "p.tex", "See~\\cite{blog} for it.")]
+        bf = [("r.bib", "r.bib", "@misc{blog, title={x}, note={\\url{https://example.org/a}}}")]
+        assert support.find_pairs(tf, bf)[0].idents == ["url:https://example.org/a"]
 
 
 class TestTerms:
@@ -399,9 +410,9 @@ class TestChecks:
     # -- plumbing
     def test_unresolvable_key_is_unverifiable_not_silent(self):
         tf = [("p.tex", "p.tex", "Something is shown~\\cite{blog}.")]
-        bf = [("r.bib", "r.bib", "@misc{blog, title={x}, note={\\url{https://example.org/a}}}")]
+        bf = [("r.bib", "r.bib", "@misc{blog, title={x}, author={Doe, J}}")]
         f = one(support.check(tf, bf, provider=lambda i: None))
-        assert f.status == UNVERIFIABLE and "no arXiv id or DOI" in f.message
+        assert f.status == UNVERIFIABLE and "no arXiv id, DOI or URL" in f.message
 
     def test_offline_reports_not_checked(self):
         tf, bf = pair_for("Tong et al.~\\cite{t} show it.", "", {"t": ("arxiv:2606.01850", "Tong, Y")})
@@ -469,7 +480,7 @@ def _records():
             d = json.load(fh)
         idx = ft.TextIndex.from_json(d["index"]) if d.get("index") else None
         recs[d["ident"]] = ft.Source(d["ident"], d["title"], d["authors"], d["year"], d["abstract"],
-                                     d["tier"], idx, d["qual"], d.get("note", ""))
+                                     tier=d["tier"], index=idx, qual=d["qual"], note=d.get("note", ""))
     return recs
 
 

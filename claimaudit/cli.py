@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse, sys
 
 from . import (__version__, scan, claims as claims_mod, sources, overclaim, consistency,
-               citations, collected, registry, benchmarks, seeds, support, license as lic)
+               citations, collected, registry, benchmarks, seeds, support, judge as judge_mod, license as lic)
 from .report import (render_text, render_json, render_error_json, Finding,
                      FLAGGED, UNVERIFIABLE)
 
@@ -27,7 +27,8 @@ def unread(findings):
 
 
 def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
-        fetch=citations.default_fetch, exclude=(), registry_path=None):
+        fetch=citations.default_fetch, exclude=(), registry_path=None,
+        llm=False, llm_max_calls=25, llm_model=None, llm_client=None, usage_out=None):
     """Run checks; returns (findings, skipped)."""
     import os
     if not os.path.exists(path):
@@ -90,7 +91,17 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
     if "citation" in wanted:
         findings += citations.check(tfiles, bfiles, fetch=fetch, offline=offline, max_urls=max_urls)
     if "support" in wanted:
-        findings += support.check(tfiles, bfiles, offline=offline, max_sources=max_urls)
+        jd = None
+        if llm and not offline:
+            client = llm_client or judge_mod.AnthropicClient(model=llm_model)
+            if client.ready:
+                jd = judge_mod.Judge(client, max_calls=llm_max_calls)
+            else:
+                findings.append(Finding("scan", UNVERIFIABLE, "", 0,
+                                        "--llm was given but ANTHROPIC_API_KEY is not set, so no sentence was judged by a model"))
+        findings += support.check(tfiles, bfiles, offline=offline, max_sources=max_urls, judge=jd)
+        if jd is not None and usage_out is not None:
+            usage_out.update(jd.client.usage, model=jd.client.model, cached=(jd.calls == 0))
     if "benchmark" in wanted:
         findings += benchmarks.check(tfiles)
     if "seeds" in wanted:
@@ -129,6 +140,13 @@ def main(argv=None):
     c.add_argument("--offline", action="store_true", help="skip network lookups")
     c.add_argument("--strict", action="store_true", help="also flag every/all (noisy)")
     c.add_argument("--max-urls", type=int, default=60)
+    c.add_argument("--llm", action="store_true",
+                   help="with the support check: have a model (Anthropic API, key from ANTHROPIC_API_KEY) read the "
+                        "cited passage for sentences the plain check could not decide. Sends the sentence and short "
+                        "excerpts of the cited paper to api.anthropic.com. A SUPPORTED answer must carry a quote "
+                        "that is found verbatim in the passages shown")
+    c.add_argument("--llm-max-calls", type=int, default=25, help="most model calls per run (default 25)")
+    c.add_argument("--llm-model", default=None, help="model id (default: $CLAIMAUDIT_MODEL or " + judge_mod.DEFAULT_MODEL + ")")
     c.add_argument("--exclude", action="append", default=[], help="glob to skip (repeatable); also reads .claimauditignore")
     c.add_argument("--fail-on", choices=("flagged", "unverifiable", "never"), default="flagged",
                    help="what makes the exit code 1. 'flagged' (default) is the one to gate a "
@@ -167,8 +185,19 @@ def main(argv=None):
     if bad:
         return fail(f"unknown check(s): {bad}")
     try:
+        usage = {}
+        if ns.llm and not (only and "support" in only):
+            return fail("--llm needs the support check: add --only support")
+        if ns.llm and not ns.offline:
+            print("--llm: sentences and short excerpts of the cited papers will be sent to api.anthropic.com "
+                  f"(at most {ns.llm_max_calls} calls)", file=sys.stderr)
         findings, skipped = run(ns.path, only, ns.offline, ns.strict, ns.max_urls,
-                                paid=(t == "paid"), exclude=ns.exclude, registry_path=ns.registry)
+                                paid=(t == "paid"), exclude=ns.exclude, registry_path=ns.registry,
+                                llm=ns.llm, llm_max_calls=ns.llm_max_calls, llm_model=ns.llm_model,
+                                usage_out=usage)
+        if usage.get("calls"):
+            print(f"--llm: {usage['calls']} call(s) to {usage['model']}, {usage['input_tokens']} input and "
+                  f"{usage['output_tokens']} output tokens", file=sys.stderr)
     except FileNotFoundError:
         return fail(f"path not found: {ns.path}")
     wanted = requested_checks(only)

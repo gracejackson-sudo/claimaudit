@@ -16,7 +16,7 @@ mechanical parts of it.
 | `overclaim` | flags priority constructions, universal negatives, proof language and absolute superlatives ("we are the first", "nobody", "proven", "best ever") for you to review. Ordinary comparatives ("outperforms baselines", "SOTA on eleven tasks") are left alone. It never decides whether the claim is true. | free |
 | `source` | finds numeric claims in md/txt/tex files and looks for a matching value (a cell or a simple aggregate) in CSV/JSON files in the same folder | licensed |
 | `citation` | finds arXiv IDs, DOIs and URLs; checks they resolve; for `.bib` entries, compares authors and title with the arXiv / Crossref record; `.bbl` files are read for identifiers only | licensed |
-| `support` | **opt-in, experimental** (`--only support`). For sentences that cite an arXiv paper or DOI, looks for things the sentence asserts that are absent from the source's full text: a name, a date, a figure, a distinctive word such as "Mondrian". Reports `FLAGGED` or `UNVERIFIABLE` only, never `VERIFIED`. See "Citation support" below | licensed |
+| `support` | **opt-in, experimental** (`--only support`). For sentences that cite an arXiv paper or DOI, looks for things the sentence asserts that are absent from the source's full text: a name, a date, a figure, a distinctive word such as "Mondrian". Reports `FLAGGED` or `UNVERIFIABLE` only, never `VERIFIED`, unless you also pass `--llm`. See "Citation support" below | licensed |
 | `consistency` | flags similar sentences in different files that state different numbers | licensed |
 | `registry` | checks numbers you have tagged in the text against a registry of values your own pipeline computed | licensed |
 | `benchmark` | checks that a stated gain matches the two numbers it is stated between | licensed |
@@ -215,8 +215,10 @@ either way. If a test is named, nothing is said at all.
 ## Privacy
 
 Files are read locally and never uploaded. Network requests go only to arXiv,
-Crossref and the URLs found in your documents, and only from the `citation`
-check (`--offline` turns them off). There is no license server and no
+Crossref and the URLs found in your documents, and only from the `citation` and
+`support` checks (`--offline` turns them off). The `support` check also downloads the
+full text of the papers you cite. With `--llm`, and only then, a sentence from your
+document and short excerpts of the cited paper are sent to api.anthropic.com. There is no license server and no
 telemetry. Citation lookups are cached in `~/.cache/claimaudit`.
 
 ## Licensing
@@ -286,8 +288,39 @@ extracted text is missed after normalization, and every miss examined was an
 artifact of the reference text rather than a lost word. That is one sample of
 arXiv papers; scanned or unusual PDFs are untested.
 
+### Optional: a model reads the passage (`--llm`) &mdash; built, not yet validated on live runs
+
+For sentences the plain check could not decide, `--only support --llm` sends the
+sentence and a few short excerpts of the cited paper to the Anthropic API (key from
+`ANTHROPIC_API_KEY`, model from `--llm-model` or `CLAIMAUDIT_MODEL`; nothing else leaves
+your machine, and the key is only ever sent in a request header) and asks whether the
+paper says what the sentence says. The answer is one of:
+
+- `SUPPORTED` (reported as `VERIFIED`), `CONTRADICTED` (reported as `FLAGGED`), or
+- `UNCLEAR — NEEDS HUMAN REVIEW`, which is the default for anything else.
+
+It is built so that a confident wrong answer is hard to produce. The excerpts are chosen by
+plain word overlap, with no model involved. `SUPPORTED` and `CONTRADICTED` both need a quote,
+and the quote must be found, word for word, in the excerpts that were shown; an invented or
+paraphrased quote is thrown away. A `SUPPORTED` answer must also carry every specific figure
+in the sentence, share the sentence's own words, and survive a second call whose only job is
+to find a passage that narrows or contradicts it. A failed call, an unreadable reply, a source
+that was not fully read, or a sentence citing several sources all end as `UNCLEAR`.
+
+What it cannot do: it cannot find a qualifying passage it was not shown; it cannot tell that a
+quoted passage means something else in its context; it can never confirm that a paper "never
+mentions" something; and text in the source aimed at the model can mislead it. `SUPPORTED`
+means "a verbatim passage matches the sentence's words and figures and nothing shown narrowed
+it": a receipt for a person to glance at, not a proof. A run costs a few calls per sentence;
+`--llm-max-calls` (default 25) caps it and the token count is printed.
+
+Status: the mechanics are tested against scripted models, including ones that invent quotes,
+quote something irrelevant, ignore a figure, or obey text planted in the source, and passage
+selection reached the passage a person had identified in 15 of 15 real cases. It has **not yet
+been run against a live model on those cases**; `validation/llm_validate.py` does that, and
+this section will say what it found once it has.
+
 ## Not in v0.1
 
-An optional LLM-assisted mode (bring your own API key) to judge the sentences
-`support` leaves `UNVERIFIABLE`, and to resolve ambiguous source matches, is
-planned, not built.
+Using a model to resolve ambiguous source matches for the `source` check is
+planned, not built. (A model reading cited passages is `--llm`, above.)

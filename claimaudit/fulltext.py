@@ -190,8 +190,12 @@ class _Html(HTMLParser):
             self._refs_depth = len(self._stack)
         if tag == "math":
             alt = a.get("alttext")
-            if alt and self.keep_math and (self._content_depth is not None or not self.content_only):
-                (self.refs if self._refs_depth else self.body).append(" " + alt + " ")
+            inside = self._content_depth is not None or not self.content_only
+            # Formulas are dropped from plain text, except a bare number: "90\\%" typeset in math
+            # is still a figure the paper states, and a reader that cannot see it cannot check it.
+            simple = bool(alt) and re.fullmatch(r"[\d.,\s\\%+\-\u2212/]+", alt) is not None
+            if alt and inside and (self.keep_math or simple):
+                (self.refs if self._refs_depth else self.body).append(" " + alt.replace("\\%", "%") + " ")
             self._math += 1
         if tag in ("p", "br", "div", "li", "tr", "section", "h1", "h2", "h3", "h4", "figcaption", "caption"):
             (self.refs if self._refs_depth else self.body).append("\n")
@@ -292,15 +296,16 @@ class Source:
     authors: list = field(default_factory=list)    # surnames, normalized
     year: int = 0
     abstract: str = ""
-    tier: str = "none"               # html | pdf | abstract | metadata | none
+    tier: str = "none"               # html | pdf | web | abstract | metadata | none
     index: TextIndex | None = None
+    text: str = ""                   # plain body text, for choosing passages to show a reader
     qual: dict = field(default_factory=dict)
     note: str = ""                   # why a better tier was not reached
 
     @property
     def trusted(self):
         """True only when full text was read AND passed its self-check."""
-        return self.tier in ("html", "pdf") and bool(self.qual.get("trusted"))
+        return self.tier in ("html", "pdf", "web") and bool(self.qual.get("trusted"))
 
 
 def has_reference_tail(text):
@@ -350,7 +355,7 @@ def build_source(ident, title="", authors=(), year=0, abstract="", html=None, pd
         closed = bool(re.search(r"</html>\s*$", html, re.I))
         q = quality(idx, plain[:200000], title, abstract, tail_ok=closed)
         if q["trusted"]:
-            src.tier, src.index, src.qual = "html", idx, q
+            src.tier, src.index, src.qual, src.text = "html", idx, q, plain
             return src
         src.note = (note + "; " if note else "") + "HTML text failed its self-check: " + "; ".join(q["reasons"])
     if pdf:
@@ -360,7 +365,7 @@ def build_source(ident, title="", authors=(), year=0, abstract="", html=None, pd
             idx = TextIndex.from_text(text)
             q = quality(idx, text[:200000], title, abstract, pages=pages, failed_pages=failed,
                         tail_ok=has_reference_tail(text))
-            src.tier, src.index, src.qual = "pdf", idx, q
+            src.tier, src.index, src.qual, src.text = "pdf", idx, q, text
             if not q["trusted"]:
                 src.note = (src.note + "; " if src.note else "") + \
                     "PDF text failed its self-check: " + "; ".join(q["reasons"])
@@ -371,4 +376,20 @@ def build_source(ident, title="", authors=(), year=0, abstract="", html=None, pd
         src.tier = "abstract"
     elif title or authors:
         src.tier = "metadata"
+    return src
+
+
+def build_web_source(ident, html, title_hint=""):
+    """A plain web page (a blog post, a report). Trusted only if it was downloaded
+    whole, has a title whose words are in the text, and has a body's worth of words."""
+    m = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
+    import html as _h
+    title = _h.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", m.group(1)))).strip() if m else title_hint
+    body, refs = html_to_text(html)
+    idx = TextIndex.from_text(body, refs)
+    q = quality(idx, body[:200000], title, "", tail_ok=bool(re.search(r"</html>\s*$", html, re.I)))
+    src = Source(ident, title, [], 0, "")
+    src.tier, src.index, src.qual, src.text = "web", idx, q, body
+    if not q["trusted"]:
+        src.note = "web page failed its self-check: " + "; ".join(q["reasons"])
     return src
