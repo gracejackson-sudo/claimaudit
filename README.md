@@ -229,8 +229,10 @@ To buy, pay through the Stripe Payment Link:
 <!-- Replace this with the Stripe Payment Link. One line. Same string in claimaudit/license.py and docs/index.html. -->
 https://buy.stripe.com/8x2dRb5ND1oP75V1DWgEg00
 
-The key and install instructions arrive **by email, sent by hand** after the
-payment comes through. It is not instant. Then:
+After payment, Stripe redirects you to [`docs/success.html`](docs/success.html),
+which shows the install steps and the key. For now that is **one shared
+early-access key**, the same for every buyer, and anyone with that page's
+address can see it. Then:
 
     claimaudit activate <KEY>
 
@@ -238,7 +240,7 @@ That writes the key to `~/.claimaudit/license.json` (or `$CLAIMAUDIT_HOME`).
 Setting `CLAIMAUDIT_LICENSE_KEY` in the environment works too, which is what
 CI uses. `claimaudit status` shows which tier you are on.
 
-**This is an honor system.** The key is a token the seller emails you, not a
+**This is an honor system.** The key is a shared token, not a
 cryptographic license. Any non-empty key unlocks the paid checks; an empty or
 all-whitespace key does not. Nothing is checked against a server — `activate`
 stores the key and sends nothing anywhere, and no check ever phones home.

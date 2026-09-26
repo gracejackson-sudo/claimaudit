@@ -277,6 +277,21 @@ def test_no_lemon_squeezy_left_and_purchase_url_is_the_one_placeholder():
         assert "lemon" not in text.lower(), rel
 
 
+def test_success_page_shows_the_shared_key_and_it_unlocks(no_network):
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    page = open(os.path.join(root, "docs", "success.html"), encoding="utf-8").read()
+    key = "claimaudit-early-2026"
+    assert key in page
+    assert "3 of 8" in page
+    assert "shared" in page.lower()
+    assert "not on PyPI" in page
+    assert "email" not in page.lower()
+    index = open(os.path.join(root, "docs", "index.html"), encoding="utf-8").read()
+    assert "by email" not in index and "emailed" not in index
+    assert lic.activate(key)[0]
+    assert lic.tier()[0] == "paid"
+
+
 # ------------------------------------------------------------- cli
 def test_free_tier_runs_overclaim_only_and_skips_paid(tmp_path, capsys):
     (tmp_path / "a.md").write_text("This is the first proven method.\n")

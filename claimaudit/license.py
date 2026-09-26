@@ -1,7 +1,8 @@
 """License gating: an honor system, checked locally, with no network call.
 
-A license key is a token the seller emails after payment through the Stripe
-Payment Link below. Any non-empty key unlocks the paid checks. Nothing checks
+A license key is a token shown on docs/success.html, where the Stripe Payment
+Link below redirects after payment; for now it is one key shared by every
+buyer. Any non-empty key unlocks the paid checks. Nothing checks
 it against a server, it is not a cryptographic license, and anyone who reads
 this code can bypass it.
 """

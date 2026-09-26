@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>claimaudit — thanks for buying</title>
+<style>
+  body { font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+         max-width: 44rem; margin: 2.5rem auto; padding: 0 1.25rem; color: #1d1d1f; background: #fff; }
+  h1 { font-size: 1.7rem; margin-bottom: .2rem; }
+  h1 + p { margin-top: 0; color: #555; }
+  h2 { font-size: 1.2rem; margin-top: 2.2rem; border-bottom: 1px solid #e3e3e3; padding-bottom: .25rem; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .92em; }
+  pre { background: #f5f5f7; padding: .8rem 1rem; overflow-x: auto; border-radius: 4px; }
+  .key { font-size: 1.15rem; font-weight: 600; user-select: all; }
+  .placeholder { margin-top: .6rem; padding: .5rem .75rem;
+                 background: #fff4d6; border: 1px solid #e0b84c; border-radius: 4px; }
+  footer { margin-top: 3rem; color: #777; font-size: .9rem; }
+</style>
+</head>
+<body>
+
+<h1>Thanks for buying claimaudit</h1>
+<p>Your payment went through. Everything you need is on this page: the key and the install steps.</p>
+
+<h2>Your license key</h2>
+<p>
+  This is <strong>one shared early-access key</strong>. Everyone who buys right now gets
+  this same key. It is not a per-buyer key and it is not tied to you.
+</p>
+<pre class="key">claimaudit-early-2026</pre>
+<p>
+  This is tonight's shared-key delivery, not a per-buyer license system.
+  <strong>Anyone who has the address of this page can see the key.</strong> That is a
+  tradeoff we accepted so you get the product the moment you pay instead of waiting for
+  someone to send it. The license was already an honor system: the key is stored on your
+  machine, no server ever checks it, and anyone who reads the code can bypass it.
+</p>
+
+<h2>Before you rely on it</h2>
+<p>
+  This is an early build. On the frozen corpus of eight known real errors it catches
+  <strong>3 of 8</strong>. It reaches <strong>4 of 8 only if the author tags claims and
+  supplies a registry</strong> of the values their own pipeline computed.
+</p>
+<p>
+  On 15 third-party ML papers the free <code>overclaim</code> check was about
+  <strong>5% precise</strong>: 3 of 60 sampled flags were correct. At this sample size that
+  cannot be told apart from the 1.7% measured before. Precision on new documents is still
+  being measured. Treat its output as a reading list, not a verdict.
+</p>
+<p>If anything looks wrong, tell us.</p>
+
+<h2>Install</h2>
+<p>
+  claimaudit is <strong>not on PyPI</strong>; <code>pip install claimaudit</code> will not
+  find it. Install it from the source repository. You need Python 3.9 or newer; there are
+  no other dependencies.
+</p>
+<p class="placeholder">Repository link: add the public GitHub URL here</p>
+<pre>git clone &lt;repository URL&gt; claimaudit
+cd claimaudit
+python3 -m pip install -e .
+claimaudit activate claimaudit-early-2026
+claimaudit check path/to/folder</pre>
+<p>If the <code>claimaudit</code> script is not on your <code>PATH</code>, this does the same thing:</p>
+<pre>python3 -m claimaudit activate claimaudit-early-2026
+python3 -m claimaudit check path/to/folder</pre>
+<p>
+  <code>claimaudit status</code> shows which tier you are on; after activating it should say
+  <code>paid</code>. <code>activate</code> writes the key to
+  <code>~/.claimaudit/license.json</code> and sends nothing anywhere. In CI, set
+  <code>CLAIMAUDIT_LICENSE_KEY=claimaudit-early-2026</code> in the environment instead.
+</p>
+
+<h2>If something looks wrong</h2>
+<p>
+  A finding that is plainly wrong, a missed error, an install step that fails: we want to
+  hear about it. Open an issue on the repository, or contact the seller using the details
+  on your Stripe receipt.
+</p>
+
+<footer>claimaudit 0.1.0. No build step: this page is one HTML file.</footer>
+
+</body>
+</html>
