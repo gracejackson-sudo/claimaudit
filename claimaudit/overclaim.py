@@ -63,13 +63,24 @@ def _is_superiority(sent, m):
     return False
 
 
+# A "Proof." on its own is a theorem-block header, not a certainty claim.
+# The stress test in tests/test_paper_validation.py section G recorded 15
+# such false positives from one arXiv math paper before this gate landed;
+# "In order to prove (ii)" and "This proves (i)" inside prose still fire.
+_PROOF_HEADING = re.compile(r"^\s*proof\s*[.:]?\s*$", re.I)
+
+
+def _is_proof_language(sent, m):
+    return not _PROOF_HEADING.match(sent)
+
+
 PATTERNS = [
     (r"\bfirst\b", "priority claim", _is_priority),
     # "only one per block" is a quantity, not exclusivity.
     (r"\b(?:only\s+(?:known|way|publisher|method|tool)|"
      r"only\s+one\s+(?:that|which|to|who))\b", "exclusivity claim", None),
     (r"\b(?:nobody|no\s?one|no other|none of)\b", "universal negative", None),
-    (r"\b(?:proven|proves?|proof|prove)\b", "proof language", None),
+    (r"\b(?:proven|proves?|proof|prove)\b", "proof language", _is_proof_language),
     (r"\b(?:always|never)\b", "absolute", None),
     (r"\b(?:beats?|outperforms?|surpass(?:es)?|best|state[- ]of[- ]the[- ]art|sota)\b",
      "superiority claim", _is_superiority),

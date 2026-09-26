@@ -146,7 +146,8 @@ class Index:
             return
         stem = _split_name(os.path.splitext(os.path.basename(rel))[0])
         self.files[rel] = {"name": os.path.basename(rel).lower(), "stem": stem, "headers": {}}
-        budget = [500_000]
+        JSON_BUDGET = 500_000
+        budget = [JSON_BUDGET]
 
         def walk(o, path_, toks):
             if budget[0] <= 0:
@@ -170,6 +171,14 @@ class Index:
                 if v is not None and not isinstance(o, str):
                     self.add(v, rel, path_, stem, toks)
         walk(data, "", set())
+        if budget[0] <= 0:
+            # A partial walk means a claim against a value in the untouched
+            # part of the file would come back UNVERIFIABLE for a reason the
+            # user could not otherwise see. Surface the truncation instead.
+            self.problems.append(
+                (rel, f"is deeper or wider than the {JSON_BUDGET:,}-node walk budget, "
+                      f"so some values in it were not indexed; a claim about one of them "
+                      f"will look UNVERIFIABLE without a specific reason"))
 
     def finalize(self):
         self.items.sort(key=lambda s: s.value)

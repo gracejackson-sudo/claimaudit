@@ -677,3 +677,58 @@ def test_a_file_over_the_size_limit_leaves_a_scan_finding(tmp_path, monkeypatch)
     findings, _skipped = cli.run(str(tmp_path), paid=True, offline=True)
     unread = [f for f in findings if f.check == "scan" and f.extra.get("unread")]
     assert any("big.md" in f.file and "not audited" in f.message for f in unread)
+
+
+# A standalone "Proof." on its own line is a theorem-block header, not a
+# certainty claim. arXiv:2311.18240 (an operator-theory paper) landed 15
+# such flags in a single run before this gate.
+
+def test_a_standalone_proof_heading_is_not_a_certainty_claim():
+    assert "proof language" not in _whys("Proof.\n\nWe show that x is positive.\n")
+
+
+def test_proof_colon_at_paragraph_start_is_not_a_certainty_claim():
+    assert "proof language" not in _whys("Proof:\n\nBy induction on n.\n")
+
+
+def test_proof_inside_a_sentence_still_flags_for_review():
+    """The gate is only for the standalone heading. A word in prose is still
+    the reader's decision to review, so the check must not go quiet on it."""
+    assert "proof language" in _whys(
+        "The result offers proof that our approach improves generalisation.\n")
+    assert "proof language" in _whys("This method has been proven to converge.\n")
+
+
+def test_math_verb_prove_in_prose_still_flags():
+    """Kept firing on purpose. Distinguishing 'we prove X' as mathematics
+    from 'we prove X' as an authored certainty claim is a judgement call,
+    and silence would be the wrong side of it."""
+    assert "proof language" in _whys("In order to prove (ii) we invoke the theorem.\n")
+
+
+# A JSON registry / data file that overruns the walk budget must not fail
+# UNVERIFIABLE without saying why.
+
+def test_a_json_data_file_that_overruns_the_walk_budget_surfaces_a_problem(tmp_path, monkeypatch):
+    from claimaudit import sources
+    d = tmp_path
+    # Build a JSON with more than 500,000 nodes.
+    import json
+    big = {"a": {f"k{i}": i for i in range(600_000)}}
+    (d / "data.json").write_text(json.dumps(big))
+    (d / "paper.md").write_text("The dataset contains 42 rows.\n")
+    findings, _skipped = cli.run(str(d), only=["source"], paid=True, offline=True)
+    unverified_scan = [f for f in findings if f.check == "scan" and "data.json" in f.file
+                       and "budget" in f.message]
+    assert unverified_scan, (
+        "an untraversed JSON must surface as a scan finding so a later "
+        "UNVERIFIABLE against a value in it is not a mystery")
+
+
+def test_a_json_file_inside_the_budget_leaves_no_scan_problem(tmp_path):
+    d = tmp_path
+    (d / "data.json").write_text('{"rows": 42, "acc": 0.87}')
+    (d / "paper.md").write_text("The dataset contains 42 rows.\n")
+    findings, _skipped = cli.run(str(d), only=["source"], paid=True, offline=True)
+    scan_problems = [f for f in findings if f.check == "scan" and "budget" in f.message]
+    assert not scan_problems
