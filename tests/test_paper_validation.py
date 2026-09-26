@@ -353,7 +353,7 @@ A. Nobody.
 
 def test_a_bbl_is_discovered_alongside_bib(tmp_path):
     d = _write(tmp_path, {"main.tex": "See the references.\n", "refs.bbl": BBL})
-    _base, _text, _data, bib = scan.discover(d)
+    _base, _text, _data, bib, _p = scan.discover(d)
     assert any(rel.endswith(".bbl") for rel, _p in bib)
 
 
@@ -595,3 +595,85 @@ def test_best_judgment_is_not_superiority():
 def test_only_one_that_still_flags_exclusivity():
     assert "exclusivity claim" in _whys(
         "This is the only one that works on the public split.\n")
+
+
+# ===================================================================
+# G. Stress-test regressions from real unseen ML/math papers (audit
+#    2, 2026-09-26): patterns the priority and negation checks got
+#    wrong outside the original 15-paper set.
+# ===================================================================
+
+def test_on_the_first_attempt_is_an_ordinal_not_a_priority_claim():
+    """arXiv:2408.03314 (Snell et al.) uses this phrasing to number model
+    attempts. Six such flags landed on one paper before this fix."""
+    assert "priority claim" not in _whys(
+        "On the first attempt the model takes the incorrect approach.\n")
+    assert "priority claim" not in _whys(
+        "On the first two attempts the model makes an error.\n")
+    assert "priority claim" not in _whys(
+        "The first attempt failed and the second succeeded.\n")
+
+
+def test_the_first_attempt_to_do_something_still_flags_as_a_priority_claim():
+    """The intended catch survives: an infinitive after 'attempt' keeps the
+    priority reading. Without this the fix would loosen the check."""
+    assert "priority claim" in _whys(
+        "This is the first attempt to prove the conjecture rigorously.\n")
+
+
+def test_not_the_only_way_is_a_negated_exclusivity_claim():
+    """arXiv:2408.03314 line 70 fired here because the negation whitelist
+    stopped at linking verbs and did not include articles between 'not'
+    and the pattern."""
+    flags = [(why, matched) for why, matched in _flags(
+        "However, this approach is not the only way to use test-time compute.\n")]
+    exc = [(w, m) for w, m in flags if w.startswith("exclusivity")]
+    # It still fires (a flag is a prompt to review), but must be marked negated
+    # so a reader can filter it out at a glance.
+    assert exc, "the pattern still fires so a human can see it"
+    from claimaudit import overclaim
+    findings = overclaim.scan([("a.md", "a.md",
+                                "However, this approach is not the only way to use test-time compute.\n")])
+    assert any("(negated)" in f.message for f in findings), \
+        "the finding should be marked (negated); the whitelist should allow 'not the'"
+
+
+def test_not_a_proof_is_also_caught_as_negated():
+    """'not a X' was another gap in the negation whitelist that let the
+    proof-language pattern read a disclaimer as a claim."""
+    from claimaudit import overclaim
+    findings = overclaim.scan([("a.md", "a.md",
+                                "The example is not a proof of the general case.\n")])
+    proofs = [f for f in findings if "proof language" in f.message]
+    assert proofs, "the pattern still fires"
+    assert any("(negated)" in f.message for f in proofs)
+
+
+# ===================================================================
+# H. Scan-level: an oversize file must not be silently dropped.
+# ===================================================================
+
+def test_a_file_over_the_size_limit_surfaces_as_unread(tmp_path, monkeypatch):
+    """Before this fix, scan.discover dropped anything above MAX_BYTES with
+    no problem note, so a very large document produced a clean audit that
+    never happened."""
+    from claimaudit import scan
+    monkeypatch.setattr(scan, "MAX_BYTES", 512)
+    (tmp_path / "small.md").write_text("The 42 rows here.\n")
+    big = tmp_path / "big.md"
+    big.write_text("x " * 500)
+    assert big.stat().st_size > 512
+    _base, text, _data, _bib, problems = scan.discover(str(tmp_path))
+    assert [r for r, _ in text] == ["small.md"]
+    assert any(rel == "big.md" and "not audited" in why for rel, why in problems)
+
+
+def test_a_file_over_the_size_limit_leaves_a_scan_finding(tmp_path, monkeypatch):
+    """The run pipeline should turn the discovery problem into a visible
+    scan finding so the whole audit does not look clean when it is not."""
+    from claimaudit import scan
+    monkeypatch.setattr(scan, "MAX_BYTES", 512)
+    (tmp_path / "big.md").write_text("x " * 500)
+    findings, _skipped = cli.run(str(tmp_path), paid=True, offline=True)
+    unread = [f for f in findings if f.check == "scan" and f.extra.get("unread")]
+    assert any("big.md" in f.file and "not audited" in f.message for f in unread)

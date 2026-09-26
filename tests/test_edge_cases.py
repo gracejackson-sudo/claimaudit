@@ -73,14 +73,15 @@ def test_row_cap_must_not_corrupt_aggregates(tmp_path, monkeypatch):
     assert f[0].status != VERIFIED, "the true mean is 50.12, not 1.2345"
 
 
-@pytest.mark.xfail(strict=True, reason="oversized files are dropped with no signal")
 def test_oversized_file_skip_must_be_reported(tmp_path, monkeypatch):
+    """Fixed 2026-09-26: scan.discover now surfaces oversize files as scan
+    findings so an audit that skipped a document cannot look clean."""
     monkeypatch.setattr(scan, "MAX_BYTES", 50)
     d = _write(tmp_path, {"small.md": "Tiny note.\n",
                           "huge.md": "This file exceeds the size limit. " * 5})
     findings, _ = cli.run(d, only=["overclaim"], paid=True)
     text = render_text(findings)
-    assert "huge.md" in text or "skipped" in text.lower(), (
+    assert "huge.md" in text, (
         "a file that was never read must not be indistinguishable from a clean one")
 
 
@@ -147,7 +148,7 @@ def test_symlinked_directories_are_not_followed(tmp_path):
         os.symlink(str(d), str(d / "loop"))
     except (OSError, NotImplementedError):
         pytest.skip("symlinks unavailable")
-    _base, text, _data, _bib = scan.discover(str(d))
+    _base, text, _data, _bib, _p = scan.discover(str(d))
     assert [r for r, _ in text] == ["a.md"]
 
 
@@ -170,7 +171,7 @@ def test_byte_order_mark_does_not_leak_into_claims(tmp_path):
 def test_hidden_directories_are_skipped(tmp_path):
     """Deliberate, but it means docs under .github are never audited."""
     d = _write(tmp_path, {"ok.md": "Fine.\n", ".github/README.md": "The first proven method.\n"})
-    _base, text, _data, _bib = scan.discover(d)
+    _base, text, _data, _bib, _p = scan.discover(d)
     assert [r for r, _ in text] == ["ok.md"]
 
 

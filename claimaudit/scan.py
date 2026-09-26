@@ -19,7 +19,14 @@ def _ignored(rel, pats):
 
 
 def discover(root, exclude=()):
-    text, data, bib = [], [], []
+    """-> (base, text, data, bib, problems).
+
+    problems is [(rel, reason)] for readable files claimaudit dropped without
+    checking, so a file that was never audited never looks the same as a file
+    that passed. Only files whose extension is one this tool would otherwise
+    read are surfaced -- unknown extensions are ignored on purpose.
+    """
+    text, data, bib, problems = [], [], [], []
     root = os.path.abspath(root)
     if os.path.isfile(root):
         files = [(os.path.dirname(root), os.path.basename(root))]
@@ -35,24 +42,32 @@ def discover(root, exclude=()):
     ign = os.path.join(base, ".claimauditignore")
     if os.path.exists(ign):
         pats += [l.strip() for l in open(ign, encoding="utf-8") if l.strip() and not l.startswith("#")]
+    known = TEXT_EXT | DATA_EXT | BIB_EXT
     for d, f in files:
         p = os.path.join(d, f)
         if _ignored(os.path.relpath(p, base), pats):
             continue
-        try:
-            if os.path.getsize(p) > MAX_BYTES:
-                continue
-        except OSError:
-            continue
         ext = os.path.splitext(f)[1].lower()
         rel = os.path.relpath(p, base)
+        try:
+            size = os.path.getsize(p)
+        except OSError as e:
+            if ext in known:
+                problems.append((rel, f"size could not be read, so this file was not audited: "
+                                      f"{e.strerror or type(e).__name__}"))
+            continue
+        if size > MAX_BYTES:
+            if ext in known:
+                problems.append((rel, f"is {size:,} bytes, over the {MAX_BYTES:,}-byte limit, "
+                                      f"so this file was not audited"))
+            continue
         if ext in TEXT_EXT:
             text.append((rel, p))
         elif ext in DATA_EXT:
             data.append((rel, p))
         elif ext in BIB_EXT:
             bib.append((rel, p))
-    return base, text, data, bib
+    return base, text, data, bib, problems
 
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"

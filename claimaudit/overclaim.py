@@ -7,12 +7,23 @@ from .report import Finding, FLAGGED
 # A priority claim is a construction, not the word "first". The old rule was
 # an exclusion list of nouns; that is why "first hidden layer" and
 # sentence-initial "First," kept firing.
+#
+# "attempt" was in the noun list to catch "the first attempt to prove X", but
+# it also fired on "on the first attempt the model made a mistake" -- an
+# ordinal, not a priority claim. It is now allowed only followed by "to",
+# so the priority reading survives and the ordinal reading does not.
+# Intervening tokens between "first" and the target noun cannot themselves be
+# determiners: "the first attempt the model takes" was matching as
+# adjective + noun and firing on ordinary ordinal usage. The negative
+# lookahead blocks that reading without losing "the first well-known method".
+_INTERV = r"(?!the\b|a\b|an\b|of\b|for\b|on\b|to\b)\w+"
 _PRIORITY = re.compile(
     r"(?:we\s+are\s+the\s+first|"
     r"this\s+is\s+the\s+first|"
     r"the\s+first\s+(?:to|that|which)\b|"
-    r"the\s+first(?:\s+\w+){0,3}\s+(?:work|paper|study|method|model|approach|"
-    r"system|attempt)\b|"
+    r"the\s+first(?:\s+" + _INTERV + r"){0,2}\s+"
+    r"(?:work|paper|study|method|model|approach|system)\b|"
+    r"the\s+first(?:\s+" + _INTERV + r"){0,2}\s+attempt\s+to\b|"
     r"for\s+the\s+first\s+time|"
     r"(?:are|is|was|were)\s+the\s+first\s+to\b)",
     re.I,
@@ -69,7 +80,10 @@ PATTERNS = [
     (r"\b(?:everyone|everybody|all\s+users|any\s+model)\b", "universal claim", None),
 ]
 STRICT = [(r"\b(?:every|all)\b", "universal quantifier (noisy)", None)]
-NEG = re.compile(r"(?:\bnot|\bno|n't|\bnever|\bwithout|\bnor)\s+(?:(?:be|been|is|are|was|were|yet|really|always|necessarily|fully)\s+)*$", re.I)
+# Articles are allowed between "not" and the target because "not the only way"
+# and "not a proof" are common negation patterns and were missed by the older
+# linking-verbs-only whitelist.
+NEG = re.compile(r"(?:\bnot|\bno|n't|\bnever|\bwithout|\bnor)\s+(?:(?:be|been|is|are|was|were|yet|really|always|necessarily|fully|the|a|an)\s+)*$", re.I)
 
 
 def scan(files, strict=False):

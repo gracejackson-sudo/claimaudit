@@ -43,8 +43,10 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
     import os
     if not os.path.exists(path):
         raise FileNotFoundError(path)
-    base, text, data, bib = scan.discover(path, exclude)
+    base, text, data, bib, scan_problems = scan.discover(path, exclude)
     findings = []
+    for rel, why in scan_problems:
+        findings.append(Finding("scan", UNVERIFIABLE, rel, 0, why, "", {"unread": True}))
     tfiles, bfiles = [], []
     for dest, group in ((tfiles, text), (bfiles, bib)):
         for rel, p in group:
