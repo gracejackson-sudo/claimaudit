@@ -323,3 +323,87 @@ def test_a_macro_with_real_contents_still_unwraps():
     joined = _tex_sent(r"We get \(90.1\%\) coverage across \emph{817} rows.")
     assert "90.1%" in joined and "817" in joined
     assert "emph" not in joined.lower()
+
+
+# ===================================================================
+# B1. "first" as a discourse marker, ordinal, or quantity.
+# ===================================================================
+
+def test_sentence_initial_first_comma_is_not_a_priority_claim():
+    assert "priority claim" not in _whys(
+        "First, chain of thought, in principle, allows models to decompose a problem.\n")
+
+
+def test_we_first_need_is_not_a_priority_claim():
+    assert "priority claim" not in _whys(
+        "We first need to clarify what alignment means.\n")
+
+
+def test_the_first_is_enumeration_not_priority():
+    assert "priority claim" not in _whys(
+        "The first is a multi-head self-attention mechanism, and the second is a feed-forward network.\n")
+
+
+def test_first_hidden_layer_is_not_a_priority_claim():
+    assert "priority claim" not in _whys(
+        "the distribution of weights for the first hidden layer, second hidden layer, and output layer.\n")
+
+
+def test_first_n_steps_is_a_quantity_not_priority():
+    assert "priority claim" not in _whys(
+        "The learning rate is warmed up over the first 10,000 steps.\n")
+
+
+def test_a_real_priority_construction_still_flags():
+    assert "priority claim" in _whys("This is the first method that scales to this regime.\n")
+    assert "priority claim" in _whys("We are the first to show this on public data.\n")
+    assert "priority claim" in _whys("Our method is the first to solve this.\n")
+
+
+# ===================================================================
+# B2. Table-backed comparatives are not superiority overclaims.
+# ===================================================================
+
+def test_sota_on_named_tasks_is_not_a_superiority_overclaim():
+    """BERT: accurate, table-backed, and the previous rule's most common hit."""
+    assert "superiority claim" not in _whys(
+        "It obtains new state-of-the-art results on eleven NLP tasks.\n")
+
+
+def test_improving_over_best_results_by_a_number_is_not_flagged():
+    assert "superiority claim" not in _whys(
+        "The Transformer improves over the existing best results on WMT 2014 by over 2 BLEU.\n")
+
+
+def test_outperforms_baselines_is_not_a_superiority_overclaim():
+    assert "superiority claim" not in _whys(
+        "LoRA outperforms several baselines with comparable or fewer trainable parameters.\n")
+
+
+def test_a_universal_comparative_still_flags():
+    assert "superiority claim" in _whys("It never fails and beats everything.\n")
+    assert "superiority claim" in _whys("This is the best model ever released.\n")
+
+
+# ===================================================================
+# B3. Word-sense misfires on "only" and "best".
+# ===================================================================
+
+def test_only_one_per_block_is_a_quantity_not_exclusivity():
+    assert "exclusivity claim" not in _whys(
+        "The block has only one per block but with an additional LayerNorm.\n")
+
+
+def test_at_best_is_an_upper_bound_not_superiority():
+    assert "superiority claim" not in _whys(
+        "The runs reach minimum validation loss at best 3.5x faster.\n")
+
+
+def test_best_judgment_is_not_superiority():
+    assert "superiority claim" not in _whys(
+        "When the rating is unclear you should use your best judgment.\n")
+
+
+def test_only_one_that_still_flags_exclusivity():
+    assert "exclusivity claim" in _whys(
+        "This is the only one that works on the public split.\n")

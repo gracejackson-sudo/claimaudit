@@ -13,7 +13,7 @@ mechanical parts of it.
 
 | check | what it does | tier |
 |---|---|---|
-| `overclaim` | flags absolute or superlative words ("first", "proven", "always", "nobody", "beats", ...) for you to review. It never decides whether the claim is true. | free |
+| `overclaim` | flags priority constructions, universal negatives, proof language and absolute superlatives ("we are the first", "nobody", "proven", "best ever") for you to review. Ordinary comparatives ("outperforms baselines", "SOTA on eleven tasks") are left alone. It never decides whether the claim is true. | free |
 | `source` | finds numeric claims in md/txt/tex files and looks for a matching value (a cell or a simple aggregate) in CSV/JSON files in the same folder | licensed |
 | `citation` | finds arXiv IDs, DOIs and URLs; checks they resolve; for `.bib` entries, compares authors and title with the arXiv / Crossref record; `.bbl` files are read for identifiers only | licensed |
 | `consistency` | flags similar sentences in different files that state different numbers | licensed |
