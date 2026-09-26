@@ -5,11 +5,26 @@ from __future__ import annotations
 import json, os, re, time, unicodedata, urllib.request, urllib.error, urllib.parse
 from .report import Finding, VERIFIED, FLAGGED, UNVERIFIABLE
 
-UA = "claimaudit/0.1 (+local citation check)"
+UA = ("claimaudit/0.1 (citation checker; +https://pypi.org/project/claimaudit/) "
+      "Python-urllib")
 ARXIV_RX = re.compile(r"(?i)(?:arxiv[:\s/]*(?:abs/|pdf/)?|arxiv\.org/(?:abs|pdf)/)(\d{4}\.\d{4,5})(?:v\d+)?")
 DOI_RX = re.compile(r"\b(10\.\d{4,9}/[^\s\"<>{}|\\^`\[\]]+)")
 URL_RX = re.compile(r"https?://[^\s\"<>{}|\\^`\)\]]+")
 BLOCKED = {401, 403, 405, 406, 429, 451, 503, 999}
+
+# arXiv's API rejects a query that carries max_results alongside id_list, and
+# rejects a comma-joined id_list, with 406 in both cases -- so the batching this
+# module used to do never returned an answer at all. One id per query is the
+# only shape that answers today, and arXiv asks for a pause between requests.
+ARXIV_API = "https://export.arxiv.org/api/query?id_list="
+ARXIV_MIN_INTERVAL = 3.0
+_last_arxiv_call = 0.0
+
+# Cached verdicts are keyed by this. Bump it when a bug made the stored answers
+# wrong, so the bad generation is ignored rather than served for another week:
+# version 2 discards everything written while a blocked arXiv response was
+# being recorded as "not found".
+CACHE_VERSION = 2
 
 
 # ------------------------------------------------------------------ fetching
@@ -24,9 +39,17 @@ def default_fetch(url, method="GET", timeout=15):
     key = os.path.join(_cache_dir(), re.sub(r"[^A-Za-z0-9]", "_", method + url)[:180] + ".json")
     try:
         if os.path.exists(key) and time.time() - os.path.getmtime(key) < 7 * 86400:
-            d = json.load(open(key)); return d["s"], d["b"]
+            d = json.load(open(key))
+            if d.get("v") == CACHE_VERSION:
+                return d["s"], d["b"]
     except (OSError, ValueError):
         pass
+    if url.startswith(ARXIV_API):
+        global _last_arxiv_call
+        wait = ARXIV_MIN_INTERVAL - (time.time() - _last_arxiv_call)
+        if wait > 0:
+            time.sleep(wait)
+        _last_arxiv_call = time.time()
     req = urllib.request.Request(url, method=method, headers={"User-Agent": UA})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -36,9 +59,11 @@ def default_fetch(url, method="GET", timeout=15):
         res = (e.code, "")
     except Exception:
         return 0, ""
-    if res[0] and res[0] < 500:
+    # A refusal says nothing about the resource, so storing it would turn one
+    # throttled minute into a week of confident wrong answers.
+    if res[0] and res[0] < 500 and res[0] not in BLOCKED:
         try:
-            json.dump({"s": res[0], "b": res[1]}, open(key, "w"))
+            json.dump({"v": CACHE_VERSION, "s": res[0], "b": res[1]}, open(key, "w"))
         except OSError:
             pass
     return res
@@ -150,35 +175,43 @@ def check(text_files, bib_files, fetch=default_fetch, offline=False, max_urls=60
             out.append(Finding("citation", UNVERIFIABLE, rel, line, f"{kind} {ident}: not checked (offline)"))
         return out
 
-    # arXiv, batched
+    # arXiv, one id per query
     ids = sorted(i for (k, i) in seen_ids if k == "arxiv")
-    meta, net_fail = {}, set()
-    for s in range(0, len(ids), 40):
-        chunk = ids[s:s + 40]
-        st, body = fetch("https://export.arxiv.org/api/query?max_results=50&id_list=" + ",".join(chunk))
+    meta, unchecked = {}, {}
+    for i in ids:
+        st, body = fetch(ARXIV_API + i)
         if st == 200:
             meta.update(parse_arxiv(body))
         elif st == 0:
-            for i in chunk:
-                net_fail.add(i)
-                rel, line = seen_ids[("arxiv", i)]
-                out.append(Finding("citation", UNVERIFIABLE, rel, line, f"arXiv:{i}: network unavailable"))
+            unchecked[i] = "could not reach arXiv to check this (network unavailable)"
+        elif st in BLOCKED:
+            # The request never reached an answer. Reporting "not found" here
+            # would assert the paper does not exist on the strength of a
+            # refusal to talk to us.
+            unchecked[i] = f"could not reach arXiv to check this (arXiv returned {st})"
+        else:
+            unchecked[i] = f"could not check this (arXiv returned {st})"
     bibby = {aid: (rel, e) for rel, e, aid in arx_entries}
     for i in ids:
         rel, line = seen_ids[("arxiv", i)]
         if i in bibby:
             rel, line = bibby[i][0], bibby[i][1]["line"]
-        if i in net_fail:
+        if i in unchecked:
+            out.append(Finding("citation", UNVERIFIABLE, rel, line, f"arXiv:{i}: {unchecked[i]}"))
             continue
         if i not in meta:
             out.append(Finding("citation", FLAGGED, rel, line, f"arXiv:{i}: not found on arXiv"))
             continue
-        probs = _compare(bibby[i][1], meta[i], i) if i in bibby else []
+        # A .bbl entry carries an identifier but no parsed author or title, so
+        # there is nothing to compare and the report must not say there was.
+        comparable = i in bibby and any(bibby[i][1]["fields"].get(k) for k in ("author", "title"))
+        probs = _compare(bibby[i][1], meta[i], i) if comparable else []
         if probs:
             out.append(Finding("citation", FLAGGED, rel, line, f"arXiv:{i}: bib entry does not match arXiv record",
                                "; ".join(probs)))
         else:
-            note = "matches bib authors/title" if i in bibby else "resolves (title: " + meta[i]["title"][:60] + ")"
+            note = ("matches bib authors/title" if comparable
+                    else "resolves (title: " + meta[i]["title"][:60] + ")")
             out.append(Finding("citation", VERIFIED, rel, line, f"arXiv:{i}: {note}"))
 
     # DOIs
