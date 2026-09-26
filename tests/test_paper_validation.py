@@ -391,6 +391,89 @@ A. Someone.
                            fetch=lambda *a, **k: (200, "")) == []
 
 
+# Verbatim from the .bbl files shipped in the arXiv sources of VGG
+# (1409.1556, ilsvrc14.bbl) and GPT-3 (2005.14165, main.bbl). DBLP writes
+# arXiv as a venue with a bare id; the re-measure found 23 of these skipped
+# without a word, 16 in VGG and 7 in GPT-3.
+VGG_CORR_BBL = r"""
+\bibitem[Girshick et~al.(2014)Girshick, Donahue, Darrell, and
+  Malik]{Girshick14a}
+Girshick, R.~B., Donahue, J., Darrell, T., and Malik, J.
+\newblock Rich feature hierarchies for accurate object detection and semantic
+  segmentation.
+\newblock \emph{CoRR}, abs/1311.2524v5, 2014.
+\newblock Published in Proc. CVPR, 2014.
+
+
+\bibitem[He et~al.(2014)He, Zhang, Ren, and Sun]{He14}
+He, K., Zhang, X., Ren, S., and Sun, J.
+\newblock Spatial pyramid pooling in deep convolutional networks for visual
+  recognition.
+\newblock \emph{CoRR}, abs/1406.4729v2, 2014.
+"""
+
+GPT3_CORR_BBL = r"""
+\bibitem[CCE{\etalchar{+}}18]{Clark2018ThinkYH}
+Peter Clark, Isaac Cowhey, Oren Etzioni, Tushar Khot, Ashish Sabharwal, Carissa
+  Schoenick, and Oyvind Tafjord.
+\newblock Think you have solved question answering? try arc, the ai2 reasoning
+  challenge.
+\newblock {\em ArXiv}, abs/1803.05457, 2018.
+
+\bibitem[SDSE19]{schwartz2019}
+Roy Schwartz, Jesse Dodge, Noah~A. Smith, and Oren Etzioni.
+\newblock Green {AI}.
+\newblock {\em CoRR}, abs/1907.10597, 2019.
+
+\bibitem[TL05]{DBLP:journals/corr/abs-cs-0508103}
+Peter~D. Turney and Michael~L. Littman.
+\newblock Corpus-based learning of analogies and semantic relations.
+\newblock {\em CoRR}, abs/cs/0508103, 2005.
+"""
+
+
+def _eprints(bbl):
+    return {e["key"]: e["fields"].get("eprint") for e in citations.parse_bbl(bbl)}
+
+
+def test_a_corr_abs_id_in_a_bbl_is_read_as_an_arxiv_id():
+    assert _eprints(VGG_CORR_BBL) == {"Girshick14a": "1311.2524", "He14": "1406.4729"}
+
+
+def test_an_arxiv_venue_abs_id_is_read_too():
+    got = _eprints(GPT3_CORR_BBL)
+    assert got == {"Clark2018ThinkYH": "1803.05457", "schwartz2019": "1907.10597"}
+
+
+def test_an_old_style_abs_id_is_reported_not_skipped_or_guessed():
+    assert citations.bbl_unparsed(GPT3_CORR_BBL) == [
+        (14, "DBLP:journals/corr/abs-cs-0508103", "abs/cs/0508103")]
+    found = citations.check([], [("main.bbl", "main.bbl", GPT3_CORR_BBL)], offline=True)
+    note = [f for f in found if "not parsed" in f.message]
+    assert len(note) == 1 and note[0].status == UNVERIFIABLE
+    assert note[0].message.startswith("1 bibliography identifier was present but not parsed")
+    assert "abs/cs/0508103" in note[0].evidence
+    assert not any(f.status == FLAGGED for f in found)
+
+
+def test_corr_ids_are_looked_up_and_resolve():
+    def fetch(url, method="GET", timeout=15):
+        aid = url.rsplit("=", 1)[1]
+        return 200, (f"<feed><entry><id>http://arxiv.org/abs/{aid}v1</id>"
+                     f"<title>T</title></entry></feed>")
+
+    found = citations.check([], [("ilsvrc14.bbl", "ilsvrc14.bbl", VGG_CORR_BBL)], fetch=fetch)
+    assert {f.message.split(":")[1] for f in found} == {"1311.2524", "1406.4729"}
+    assert all(f.status == VERIFIED for f in found)
+
+
+def test_abs_in_a_non_arxiv_url_is_neither_an_arxiv_id_nor_unparsed():
+    bbl = (r"\bibitem{acm}" "\nA. Author.\n\\newblock A paper.\n"
+           r"\newblock \url{https://dl.acm.org/doi/abs/10.1145/3491102.3517582}." "\n")
+    assert citations.bbl_unparsed(bbl) == []
+    assert "eprint" not in citations.parse_bbl(bbl)[0]["fields"]
+
+
 def test_bbl_does_not_claim_authors_and_title_matched():
     """A .bbl has no parsed author/title, so the report must not say they matched."""
     atom = ("<feed><entry><id>http://arxiv.org/abs/1810.04805</id>"

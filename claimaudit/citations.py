@@ -107,22 +107,50 @@ def parse_bib(text):
     return entries
 
 
+# DBLP-derived .bbl entries name arXiv as a venue and give the id bare:
+# "\emph{CoRR}, abs/1706.03762" or "{\em ArXiv}, abs/1803.05457". Anything
+# in that position that is not a modern id (abs/cs/0508103) is reported as
+# unparsed, never guessed at.
+VENUE_ABS_RX = re.compile(r"(?i)\b(?:corr|arxiv)\W{1,6}abs/([^\s,;{}]+)")
+MODERN_ID_RX = re.compile(r"(\d{4}\.\d{4,5})(?:v\d+)?\.?")
+
+
+def _bbl_chunks(text):
+    """-> (line, key, chunk) per \\bibitem."""
+    starts = [(m.start(), m.end(), m.group(1))
+              for m in re.finditer(r"\\bibitem(?:\[[^\]]*\])?\{([^}]*)\}", text)]
+    for i, (start, end, key) in enumerate(starts):
+        chunk = text[end:starts[i + 1][0] if i + 1 < len(starts) else len(text)]
+        yield text[:start].count("\n") + 1, key, chunk
+
+
+def _venue_abs(chunk):
+    """-> (modern arXiv id or None, raw text after abs/ or None)."""
+    vm = VENUE_ABS_RX.search(chunk)
+    if not vm:
+        return None, None
+    mm = MODERN_ID_RX.fullmatch(vm.group(1))
+    return (mm.group(1) if mm else None), vm.group(1)
+
+
 def parse_bbl(text):
     """Pull only identifiers a .bbl writes unambiguously.
 
     A .bbl is formatted output, not BibTeX. Author lists and \\newblock
     'titles' are too easy to invent, so they are left alone. An entry with
-    no arXiv id and no DOI is skipped rather than guessed at.
+    no arXiv id and no DOI is skipped rather than guessed at; one that has an
+    identifier we could not read is reported by bbl_unparsed.
     """
-    starts = [(m.start(), m.end(), m.group(1))
-              for m in re.finditer(r"\\bibitem(?:\[[^\]]*\])?\{([^}]*)\}", text)]
     entries = []
-    for i, (start, end, key) in enumerate(starts):
-        chunk = text[end:starts[i + 1][0] if i + 1 < len(starts) else len(text)]
+    for line, key, chunk in _bbl_chunks(text):
         fields = {}
         am = ARXIV_RX.search(chunk) or ARXIV_RX.search(key)
         if am:
             fields["eprint"] = am.group(1)
+        else:
+            vid, _raw = _venue_abs(chunk)
+            if vid:
+                fields["eprint"] = vid
         dm = DOI_RX.search(chunk)
         if dm:
             fields["doi"] = dm.group(1).rstrip(".,;:)")
@@ -135,9 +163,21 @@ def parse_bbl(text):
             if title:
                 fields["title"] = title
         if "eprint" in fields or "doi" in fields:
-            entries.append({"key": key, "fields": fields,
-                            "line": text[:start].count("\n") + 1})
+            entries.append({"key": key, "fields": fields, "line": line})
     return entries
+
+
+def bbl_unparsed(text):
+    """-> [(line, key, raw)] for entries naming an arXiv identifier we could
+    not read, and that carry nothing else we could check them by."""
+    out = []
+    for line, key, chunk in _bbl_chunks(text):
+        if ARXIV_RX.search(chunk) or ARXIV_RX.search(key) or DOI_RX.search(chunk):
+            continue
+        vid, raw = _venue_abs(chunk)
+        if raw and not vid:
+            out.append((line, key, "abs/" + raw.rstrip(".")))
+    return out
 
 
 def surnames(author_field):
@@ -190,6 +230,17 @@ def check(text_files, bib_files, fetch=default_fetch, offline=False, max_urls=60
     arx_entries, doi_entries, seen_ids = [], [], {}
     # bib / bbl entries
     for rel, _p, text in bib_files:
+        if rel.lower().endswith(".bbl"):
+            skipped = bbl_unparsed(text)
+            if skipped:
+                n = len(skipped)
+                out.append(Finding(
+                    "citation", UNVERIFIABLE, rel, skipped[0][0],
+                    f"{n} bibliography identifier{'s' if n != 1 else ''} "
+                    f"{'were' if n != 1 else 'was'} present but not parsed, so "
+                    f"{'they were' if n != 1 else 'it was'} not checked",
+                    "; ".join(f"line {ln} {key}: {raw}" for ln, key, raw in skipped[:5])
+                    + (f"; and {n - 5} more" if n > 5 else "")))
         parsed = parse_bbl(text) if rel.lower().endswith(".bbl") else parse_bib(text)
         for e in parsed:
             f = e["fields"]
