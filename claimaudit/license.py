@@ -11,7 +11,10 @@ import json, os, time
 
 # Replace this with the Stripe Payment Link. One line. (Same string in README.md and docs/index.html.)
 PURCHASE_URL = "https://buy.stripe.com/8x2dRb5ND1oP75V1DWgEg00"
-PAID_CHECKS = ("source", "citation", "consistency", "registry", "benchmark", "seeds")
+PAID_CHECKS = ("source", "citation", "consistency", "registry", "benchmark", "seeds", "support")
+# Runs only when asked for by name (--only support): it downloads full texts, so it is slow
+# and touches the network far more than the other checks do.
+OPT_IN_CHECKS = ("support",)
 FREE_CHECKS = ("overclaim",)
 
 

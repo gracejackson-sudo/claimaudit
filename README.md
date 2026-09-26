@@ -16,6 +16,7 @@ mechanical parts of it.
 | `overclaim` | flags priority constructions, universal negatives, proof language and absolute superlatives ("we are the first", "nobody", "proven", "best ever") for you to review. Ordinary comparatives ("outperforms baselines", "SOTA on eleven tasks") are left alone. It never decides whether the claim is true. | free |
 | `source` | finds numeric claims in md/txt/tex files and looks for a matching value (a cell or a simple aggregate) in CSV/JSON files in the same folder | licensed |
 | `citation` | finds arXiv IDs, DOIs and URLs; checks they resolve; for `.bib` entries, compares authors and title with the arXiv / Crossref record; `.bbl` files are read for identifiers only | licensed |
+| `support` | **opt-in, experimental** (`--only support`). For sentences that cite an arXiv paper or DOI, looks for things the sentence asserts that are absent from the source's full text: a name, a date, a figure, a distinctive word such as "Mondrian". Reports `FLAGGED` or `UNVERIFIABLE` only, never `VERIFIED`. See "Citation support" below | licensed |
 | `consistency` | flags similar sentences in different files that state different numbers | licensed |
 | `registry` | checks numbers you have tagged in the text against a registry of values your own pipeline computed | licensed |
 | `benchmark` | checks that a stated gain matches the two numbers it is stated between | licensed |
@@ -246,8 +247,42 @@ all-whitespace key does not. Nothing is checked against a server — `activate`
 stores the key and sends nothing anywhere, and no check ever phones home.
 Anyone who reads the code can bypass it.
 
+## Citation support (`--only support`, experimental)
+
+`citation` checks that a reference exists. `support` asks a harder question: for a
+sentence that cites a source and says something specific about it, is that thing
+there? It downloads the cited paper's full text (arXiv's HTML version, or the PDF
+if you install `pypdf`) and looks for what the sentence asserts. It flags:
+
+- a name the sentence gives for the source's authors who is not on the record,
+  or a bibliography author list that disagrees with the record;
+- a date the sentence gives for the source that the record contradicts;
+- a proper noun, acronym or compound the sentence attributes to the source that
+  appears nowhere in its text (the Vovk 2012 / "Mondrian" case);
+- a specific figure that is not in the text;
+- "X never mentions Y" when the text does mention Y.
+
+**It cannot confirm support.** A word being in a paper says nothing about whether
+the paper backs the claim, so the check never says `VERIFIED`; absence is
+evidence and presence is not. Most sentences will come back `UNVERIFIABLE`,
+including every overstatement whose words are all present (for example "recovery
+above 99% for every scheme" against a source that says so only for one benchmark
+average). Judging those needs a reader, or a reasoning layer that is not built.
+
+**When it refuses to flag.** It only says a word is absent when it read the full
+text and the text passed a self-check: the title's and abstract's words must be
+found in it, the end of the document must be present, and no page may have failed.
+A source it could not read that way, a citation with no arXiv id or DOI, and any
+sentence citing several sources of which one is unreadable, all stay
+`UNVERIFIABLE`. Because extraction can be wrong in ways that produce false
+"not found" results, this was measured on ten real papers (see
+`fixtures/citation_support/README.md`): about 1 in 250 rare words in a PDF's
+extracted text is missed after normalization, and every miss examined was an
+artifact of the reference text rather than a lost word. That is one sample of
+arXiv papers; scanned or unusual PDFs are untested.
+
 ## Not in v0.1
 
-An optional LLM-assisted mode (bring your own API key) to judge whether a
-citation supports its sentence and to resolve ambiguous source matches is
+An optional LLM-assisted mode (bring your own API key) to judge the sentences
+`support` leaves `UNVERIFIABLE`, and to resolve ambiguous source matches, is
 planned, not built.
