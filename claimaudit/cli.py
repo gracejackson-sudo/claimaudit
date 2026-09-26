@@ -69,7 +69,7 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
         findings.append(Finding("scan", FLAGGED, path, 0,
                                 "no readable documents were found here, so nothing was checked "
                                 "(claimaudit reads .md, .markdown, .txt, .tex, .rst, .ipynb, "
-                                ".docx and .bib)"))
+                                ".docx, .bib and .bbl)"))
     wanted = requested_checks(only)
     skipped = [c for c in wanted if c in lic.PAID_CHECKS and not paid]
     wanted = [c for c in wanted if c not in skipped]

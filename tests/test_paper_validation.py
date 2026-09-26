@@ -11,11 +11,13 @@ Nothing in this file touches the network.
 """
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from claimaudit import citations, cli, overclaim, scan
 from claimaudit.claims import sentences
-from claimaudit.report import FLAGGED, UNVERIFIABLE
+from claimaudit.report import FLAGGED, UNVERIFIABLE, VERIFIED
 
 
 @pytest.fixture(autouse=True)
@@ -217,3 +219,80 @@ def test_an_empty_markdown_file_is_still_harmless(tmp_path):
     d = _write(tmp_path, {"empty.md": "", "blank.md": "   \n\n"})
     found, _ = cli.run(d, paid=True, offline=True)
     assert found == []
+
+
+# ===================================================================
+# A4. Most arXiv sources ship a .bbl, which was never opened.
+# ===================================================================
+
+# A typical natbib/plain .bbl: identifiers are reliable; the \newblock
+# lines are not (title and venue look the same).
+BBL = r"""\begin{thebibliography}{99}
+\bibitem[Devlin et al.(2019)]{bert}
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova.
+\newblock BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding.
+\newblock {\em arXiv:1810.04805}, 2019.
+
+\bibitem[Liu et al.(2019)]{roberta}
+Yinhan Liu et al.
+\newblock RoBERTa: A Robustly Optimized BERT Pretraining Approach.
+\newblock DOI: 10.48550/arXiv.1907.11692, 2019.
+
+\bibitem[Nobody(2020)]{opaque}
+A. Nobody.
+\newblock Something we cannot identify from this entry alone.
+\newblock In {\em A Venue}, 2020.
+\end{thebibliography}
+"""
+
+
+def test_a_bbl_is_discovered_alongside_bib(tmp_path):
+    d = _write(tmp_path, {"main.tex": "See the references.\n", "refs.bbl": BBL})
+    _base, _text, _data, bib = scan.discover(d)
+    assert any(rel.endswith(".bbl") for rel, _p in bib)
+
+
+def test_bbl_identifiers_are_checked_and_nothing_else_is_invented():
+    asked = []
+
+    def fetch(url, method="GET", timeout=15):
+        asked.append(url)
+        if "1810.04805" in url:
+            return 200, ("<feed><entry><id>http://arxiv.org/abs/1810.04805</id>"
+                         "<title>BERT</title><author><name>Jacob Devlin</name></author></entry></feed>")
+        if "10.48550" in url:
+            return 200, json.dumps({"message": {"title": ["RoBERTa"], "author": [{"family": "Liu"}]}})
+        return 0, ""
+
+    found = citations.check([], [("refs.bbl", "refs.bbl", BBL)], fetch=fetch)
+    assert any("1810.04805" in f.message and f.status == VERIFIED for f in found)
+    assert any("10.48550" in f.message and f.status == VERIFIED for f in found)
+    # The opaque entry has no identifier. Guessing a flag for it would be
+    # a new false positive, which is the failure this whole task exists to stop.
+    assert not any("opaque" in (f.message + f.evidence).lower() or "Nobody" in f.message
+                   for f in found)
+    assert not any("authors differ" in (f.evidence or "") for f in found)
+    assert not any("title differ" in (f.evidence or "") for f in found)
+
+
+def test_an_ambiguous_bbl_entry_is_skipped_not_flagged():
+    text = r"""\bibitem{x}
+A. Someone.
+\newblock A title or maybe a venue.
+\newblock 2018.
+"""
+    assert citations.parse_bbl(text) == []
+    assert citations.check([], [("r.bbl", "r.bbl", text)],
+                           fetch=lambda *a, **k: (200, "")) == []
+
+
+def test_bbl_does_not_claim_authors_and_title_matched():
+    """A .bbl has no parsed author/title, so the report must not say they matched."""
+    atom = ("<feed><entry><id>http://arxiv.org/abs/1810.04805</id>"
+            "<title>BERT</title><author><name>Jacob Devlin</name></author></entry></feed>")
+    bbl = "\\bibitem{bert}\narXiv:1810.04805\n"
+    found = citations.check([], [("r.bbl", "r.bbl", bbl)],
+                            fetch=lambda *a, **k: (200, atom))
+    assert found and found[0].status != FLAGGED
+    assert "matches bib authors/title" not in found[0].message
+    assert "resolves" in found[0].message

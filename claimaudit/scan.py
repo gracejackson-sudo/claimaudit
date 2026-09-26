@@ -4,7 +4,7 @@ import fnmatch, json, os, re, xml.etree.ElementTree as ET, zipfile
 
 TEXT_EXT = {".md", ".markdown", ".txt", ".tex", ".rst", ".ipynb", ".docx"}
 DATA_EXT = {".csv", ".json"}
-BIB_EXT = {".bib"}
+BIB_EXT = {".bib", ".bbl"}
 SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".tox",
              ".mypy_cache", ".pytest_cache", "dist", "build", ".idea", ".vscode"}
 MAX_BYTES = 30_000_000

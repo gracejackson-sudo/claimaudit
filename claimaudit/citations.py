@@ -1,6 +1,7 @@
-"""Find arXiv IDs, DOIs, URLs and .bib entries; check they resolve and, for
-.bib entries with metadata, that authors and title match the public record.
-Whether a paper actually supports the sentence citing it is NOT checked."""
+"""Find arXiv IDs, DOIs, URLs and bibliography entries; check they resolve
+and, for .bib entries with metadata, that authors and title match the public
+record. .bbl files contribute identifiers only. Whether a paper actually
+supports the sentence citing it is NOT checked."""
 from __future__ import annotations
 import json, os, re, time, unicodedata, urllib.request, urllib.error, urllib.parse
 from .report import Finding, VERIFIED, FLAGGED, UNVERIFIABLE
@@ -89,6 +90,39 @@ def parse_bib(text):
     return entries
 
 
+def parse_bbl(text):
+    """Pull only identifiers a .bbl writes unambiguously.
+
+    A .bbl is formatted output, not BibTeX. Author lists and \\newblock
+    'titles' are too easy to invent, so they are left alone. An entry with
+    no arXiv id and no DOI is skipped rather than guessed at.
+    """
+    starts = [(m.start(), m.end(), m.group(1))
+              for m in re.finditer(r"\\bibitem(?:\[[^\]]*\])?\{([^}]*)\}", text)]
+    entries = []
+    for i, (start, end, key) in enumerate(starts):
+        chunk = text[end:starts[i + 1][0] if i + 1 < len(starts) else len(text)]
+        fields = {}
+        am = ARXIV_RX.search(chunk) or ARXIV_RX.search(key)
+        if am:
+            fields["eprint"] = am.group(1)
+        dm = DOI_RX.search(chunk)
+        if dm:
+            fields["doi"] = dm.group(1).rstrip(".,;:)")
+        ym = re.search(r"\\(?:bib(?:field|info))?\{?year\}?\s*\{(\d{4})\}", chunk, re.I)
+        if ym:
+            fields["year"] = ym.group(1)
+        tm = re.search(r"\\bib(?:field|info)\{title\}\s*\{([^{}]+)\}", chunk, re.I)
+        if tm:
+            title = re.sub(r"\s+", " ", tm.group(1)).strip()
+            if title:
+                fields["title"] = title
+        if "eprint" in fields or "doi" in fields:
+            entries.append({"key": key, "fields": fields,
+                            "line": text[:start].count("\n") + 1})
+    return entries
+
+
 def surnames(author_field):
     out = []
     for a in re.split(r"\s+and\s+", re.sub(r"\s+", " ", author_field)):
@@ -137,9 +171,10 @@ def _compare(entry, meta, ident):
 def check(text_files, bib_files, fetch=default_fetch, offline=False, max_urls=60):
     out = []
     arx_entries, doi_entries, seen_ids = [], [], {}
-    # bib entries
+    # bib / bbl entries
     for rel, _p, text in bib_files:
-        for e in parse_bib(text):
+        parsed = parse_bbl(text) if rel.lower().endswith(".bbl") else parse_bib(text)
+        for e in parsed:
             f = e["fields"]
             aid = f.get("eprint") if re.fullmatch(r"\d{4}\.\d{4,5}", f.get("eprint", "")) else None
             if not aid:

@@ -15,7 +15,7 @@ mechanical parts of it.
 |---|---|---|
 | `overclaim` | flags absolute or superlative words ("first", "proven", "always", "nobody", "beats", ...) for you to review. It never decides whether the claim is true. | free |
 | `source` | finds numeric claims in md/txt/tex files and looks for a matching value (a cell or a simple aggregate) in CSV/JSON files in the same folder | licensed |
-| `citation` | finds arXiv IDs, DOIs and URLs; checks they resolve; for `.bib` entries, compares authors and title with the arXiv / Crossref record | licensed |
+| `citation` | finds arXiv IDs, DOIs and URLs; checks they resolve; for `.bib` entries, compares authors and title with the arXiv / Crossref record; `.bbl` files are read for identifiers only | licensed |
 | `consistency` | flags similar sentences in different files that state different numbers | licensed |
 | `registry` | checks numbers you have tagged in the text against a registry of values your own pipeline computed | licensed |
 | `benchmark` | checks that a stated gain matches the two numbers it is stated between | licensed |
@@ -56,7 +56,7 @@ at the wrong folder should not look like a clean result.
     claimaudit check paper.tex --only overclaim
     claimaudit check . --exclude 'data/*' --json
 
-It reads `.md`, `.markdown`, `.txt`, `.tex`, `.rst`, `.bib`, `.ipynb` and
+It reads `.md`, `.markdown`, `.txt`, `.tex`, `.rst`, `.bib`, `.bbl`, `.ipynb` and
 `.docx`. In a notebook only markdown cells are read: code-cell outputs are
 full of numbers nobody wrote as a claim, and reading them would bury the real
 ones. PDFs are not read at all, because doing it properly needs a dependency
