@@ -375,7 +375,7 @@ class TestCli:
         (tmp_path / "r.bib").write_text("@article{a, title={T}, author={Zeng, X}, eprint={2606.24020}}")
         cli.main(["check", str(tmp_path), "--only", "support", "--llm", "--json"])
         cap = capsys.readouterr()
-        assert "NOT VALIDATED AGAINST A LIVE MODEL" in cap.err and "Use with caution" in cap.err
+        assert "One live-model run recorded" in cap.err and "check by hand" in cap.err
         assert cap.out.lstrip().startswith("{")                    # stdout stays clean JSON
 
     def test_no_warning_without_llm(self, tmp_path, monkeypatch, capsys):
@@ -383,7 +383,7 @@ class TestCli:
         monkeypatch.setenv("CLAIMAUDIT_LICENSE_KEY", "k")
         (tmp_path / "a.md").write_text("Plain text.")
         cli.main(["check", str(tmp_path), "--only", "support"])
-        assert "NOT VALIDATED" not in capsys.readouterr().err
+        assert "live-model run recorded" not in capsys.readouterr().err
 
     def test_llm_needs_the_support_check(self, tmp_path, monkeypatch, capsys):
         from claimaudit import cli

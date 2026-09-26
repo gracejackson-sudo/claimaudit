@@ -1,0 +1,680 @@
+{
+ "model": "claude-sonnet-5",
+ "date": "2026-09-26",
+ "usage": {
+  "calls": 17,
+  "input_tokens": 32007,
+  "output_tokens": 2519
+ },
+ "results": [
+  {
+   "id": "bp_matrix",
+   "repeat": 0,
+   "expect": "MAY_SUPPORT",
+   "origin": "real",
+   "sentence": "Their score matrix over 84 frontier models and 133 benchmarks is approximately rank-2.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model\u2019s scores across all benchmarks are largely determined by just two numbers.",
+   "reason": "The paper directly states its 84x133 score matrix is approximately rank-2, matching the sentence's claim.",
+   "note": "the model said SUPPORTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model's scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share. Building on this, we design BenchPress: a logit-space rank-2 matrix completion method that recovers held-out scores to within 4.6 points. Using BenchPress, we find a subset of five benchmarks {GPQA-D, HLE, Codeforces, MMLU-Pro, ARC-AGI-1} that can recover the rest of a model's public scorecard to within 3.93 points. For a tighter evaluation budget, a cheaper set {GPQA-D, MMLU-Pro, Aider Polyglot, MATH-500, AIME 2026} can predict a model's evals to within 4.55. Finally, we identify what affects prediction reliability and combine these factors with predictor disagreement to quantify when predictions can be trusted. We release the score matrix, the code for reproducing all of our experiments on Github."
+    ],
+    [
+     "E2",
+     "But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model\u2019s scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share."
+    ],
+    [
+     "E3",
+     "The operational question is therefore not only whether observed scores can be compressed, but which rank best predicts held-out benchmark scores. We establish rank 2 through two lines of evidence: (i) rank-2 matrix completion minimizes held-out prediction error in raw-score and logit-score spaces (Figure 4), and (ii) Singular Value Decomposition (SVD) of fully-observed submatrices shows matching rank-2 geometry. Evidence 1: Rank-2 completion minimizes held-out prediction error."
+    ],
+    [
+     "E4",
+     "Our matrix is 76.7% missing, and some benchmarks are observed for as few as two models, so a per-benchmark regression frequently has fewer training models than free parameters. OSL\u2019s largest completion task predicts two agentic targets for twenty-two models (their Section 4.2), whereas ours predicts 133 benchmarks for 84 models. To run OSL on our matrix, we supply the dense capability block it assumes in two ways: (i) restrict to the eight most-observed benchmark columns and impute their remaining gaps before fitting OSL\u2019s capability regression; and (ii) impute the full 76.7%-missing matrix before the same fit."
+    ],
+    [
+     "E5",
+     "Hyperparameter: (number of neighbors). \u2022 Model-KNN. Find the models closest to the target model by root-mean-square distance over shared observed benchmarks, then average their scores on the target benchmark. Hyperparameter: . \u2022 Per-benchmark regression (BenchReg)."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: You Don't Need to Run Every Eval (Zeng, Papailiopoulos, 2026)\nPRECEDING SENTENCE (context only): BenchPress establishes the mechanism closest to ours.\nSENTENCE: Their score matrix over 84 frontier models and 133 benchmarks is approximately rank-2. [the cited paper]\nEXCERPTS:\n[E1] A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model's scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share. Building on this, we design BenchPress: a logit-space rank-2 matrix completion method that recovers held-out scores to within 4.6 points. Using BenchPress, we find a subset of five benchmarks {GPQA-D, HLE, Codeforces, MMLU-Pro, ARC-AGI-1} that can recover the rest of a model's public scorecard to within 3.93 points. For a tighter evaluation budget, a cheaper set {GPQA-D, MMLU-Pro, Aider Polyglot, MATH-500, AIME 2026} can predict a model's evals to within 4.55. Finally, we identify what affects prediction reliability and combine these factors with predictor disagreement to quantify when predictions can be trusted. We release the score matrix, the code for reproducing all of our experiments on Github.\n[E2] But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model\u2019s scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share.\n[E3] The operational question is therefore not only whether observed scores can be compressed, but which rank best predicts held-out benchmark scores. We establish rank 2 through two lines of evidence: (i) rank-2 matrix completion minimizes held-out prediction error in raw-score and logit-score spaces (Figure 4), and (ii) Singular Value Decomposition (SVD) of fully-observed submatrices shows matching rank-2 geometry. Evidence 1: Rank-2 completion minimizes held-out prediction error.\n[E4] Our matrix is 76.7% missing, and some benchmarks are observed for as few as two models, so a per-benchmark regression frequently has fewer training models than free parameters. OSL\u2019s largest completion task predicts two agentic targets for twenty-two models (their Section 4.2), whereas ours predicts 133 benchmarks for 84 models. To run OSL on our matrix, we supply the dense capability block it assumes in two ways: (i) restrict to the eight most-observed benchmark columns and impute their remaining gaps before fitting OSL\u2019s capability regression; and (ii) impute the full 76.7%-missing matrix before the same fit.\n[E5] Hyperparameter: (number of neighbors). \u2022 Model-KNN. Find the models closest to the target model by root-mean-square distance over shared observed benchmarks, then average their scores on the target benchmark. Hyperparameter: . \u2022 Per-benchmark regression (BenchReg).",
+     "reply": "{\"verdict\": \"SUPPORTED\", \"excerpt\": \"We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model\\u2019s scores across all benchmarks are largely determined by just two numbers.\", \"reason\": \"The paper directly states its 84x133 score matrix is approximately rank-2, matching the sentence's claim.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "bp_conformal",
+   "repeat": 0,
+   "expect": "MAY_SUPPORT",
+   "origin": "real",
+   "sentence": "BenchPress produces a conformally calibrated 90% prediction interval for each predicted score.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "This produces a trust probability and a conformally calibrated 90% prediction interval (Section 6).",
+   "reason": "Excerpt directly states BenchPress produces a conformally calibrated 90% prediction interval for each prediction.",
+   "note": "the model said SUPPORTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model's scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share. Building on this, we design BenchPress: a logit-space rank-2 matrix completion method that recovers held-out scores to within 4.6 points. Using BenchPress, we find a subset of five benchmarks {GPQA-D, HLE, Codeforces, MMLU-Pro, ARC-AGI-1} that can recover the rest of a model's public scorecard to within 3.93 points. For a tighter evaluation budget, a cheaper set {GPQA-D, MMLU-Pro, Aider Polyglot, MATH-500, AIME 2026} can predict a model's evals to within 4.55. Finally, we identify what affects prediction reliability and combine these factors with predictor disagreement to quantify when predictions can be trusted. We release the score matrix, the code for reproducing all of our experiments on Github."
+    ],
+    [
+     "E2",
+     "We combine these factors with disagreement among several score predictors to estimate the reliability of each BenchPress prediction. This produces a trust probability and a conformally calibrated 90% prediction interval (Section 6). Figure 1 previews BenchPress on four individual model\u2013benchmark examples and across all models in the score matrix."
+    ],
+    [
+     "E3",
+     "We compare the reliability estimators by asking which one best identifies safe-to-use predictions before the benchmark is run. The same risk score can also be calibrated into a trust probability and a conformal prediction interval; those details and interval-width results are reported in Section E.2. Throughout this subsection we report MedAE only, since the risk-coverage curve is measured on the absolute score-point scale."
+    ],
+    [
+     "E4",
+     "The display calibration bins held-out cells by hybrid risk, estimates the empirical within-tolerance probability in each bin, enforces a monotone nonincreasing map from risk to trust probability, and interpolates this map for displayed cells. For prediction intervals, we apply the same leave-fold-out conformal wrapper to each reliability estimator: on all folds except the evaluated fold, take the 90th percentile of , multiply the evaluated fold\u2019s risk score by that scale, and center the resulting 90% interval at the fixed Logit Bias ALS point prediction . Table 23 reports the resulting interval widths at three coverage levels."
+    ],
+    [
+     "E5",
+     "Table 23 reports the resulting interval widths at three coverage levels. Table 23: Conformal interval widths (score points) at three coverage levels; lower is sharper. The hybrid row is shaded."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: You Don't Need to Run Every Eval (Zeng, Papailiopoulos, 2026)\nSENTENCE: BenchPress produces a conformally calibrated 90% prediction interval for each predicted score. [the cited paper]\nEXCERPTS:\n[E1] A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model's scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share. Building on this, we design BenchPress: a logit-space rank-2 matrix completion method that recovers held-out scores to within 4.6 points. Using BenchPress, we find a subset of five benchmarks {GPQA-D, HLE, Codeforces, MMLU-Pro, ARC-AGI-1} that can recover the rest of a model's public scorecard to within 3.93 points. For a tighter evaluation budget, a cheaper set {GPQA-D, MMLU-Pro, Aider Polyglot, MATH-500, AIME 2026} can predict a model's evals to within 4.55. Finally, we identify what affects prediction reliability and combine these factors with predictor disagreement to quantify when predictions can be trusted. We release the score matrix, the code for reproducing all of our experiments on Github.\n[E2] We combine these factors with disagreement among several score predictors to estimate the reliability of each BenchPress prediction. This produces a trust probability and a conformally calibrated 90% prediction interval (Section 6). Figure 1 previews BenchPress on four individual model\u2013benchmark examples and across all models in the score matrix.\n[E3] We compare the reliability estimators by asking which one best identifies safe-to-use predictions before the benchmark is run. The same risk score can also be calibrated into a trust probability and a conformal prediction interval; those details and interval-width results are reported in Section E.2. Throughout this subsection we report MedAE only, since the risk-coverage curve is measured on the absolute score-point scale.\n[E4] The display calibration bins held-out cells by hybrid risk, estimates the empirical within-tolerance probability in each bin, enforces a monotone nonincreasing map from risk to trust probability, and interpolates this map for displayed cells. For prediction intervals, we apply the same leave-fold-out conformal wrapper to each reliability estimator: on all folds except the evaluated fold, take the 90th percentile of , multiply the evaluated fold\u2019s risk score by that scale, and center the resulting 90% interval at the fixed Logit Bias ALS point prediction . Table 23 reports the resulting interval widths at three coverage levels.\n[E5] Table 23 reports the resulting interval widths at three coverage levels. Table 23: Conformal interval widths (score points) at three coverage levels; lower is sharper. The hybrid row is shaded.",
+     "reply": "{\"verdict\": \"SUPPORTED\", \"excerpt\": \"This produces a trust probability and a conformally calibrated 90% prediction interval (Section 6).\", \"reason\": \"Excerpt directly states BenchPress produces a conformally calibrated 90% prediction interval for each prediction.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "tong_decouple",
+   "repeat": 0,
+   "expect": "MAY_SUPPORT",
+   "origin": "real",
+   "sentence": "Tong et al. show that compression frequently decouples accuracy from uncertainty.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "compression frequently decouples accuracy from uncertainty",
+   "reason": "The paper directly states this finding verbatim, matching the sentence's claim.",
+   "note": "the model said SUPPORTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "Model compression techniques such as quantization and pruning are widely used to reduce the deployment cost of large language models (LLMs), with existing evaluations focusing almost exclusively on accuracy preservation. However, in safety-critical applications, a model's ability to reliably quantify its own uncertainty is equally important. We ask: does compression preserve this ability? To answer this question, we benchmark 12 LLMs under various compression configurations across five NLP tasks, using conformal prediction to provide a rigorous, distribution-free measure of uncertainty. Our experiments reveal that: (I) compression frequently decouples accuracy from uncertainty; (II) larger models absorb compression-induced uncertainty far more effectively than smaller ones; and (III) uncertainty inflation is often threshold-like rather than gradual. These results suggest that accuracy-only evaluation is insufficient for assessing the deployment readiness of compressed LLMs, and that uncertainty-aware benchmarking should be a standard component of model compression pipelines."
+    ],
+    [
+     "E2",
+     "Figure 2: Accuracy change (Acc) vs. uncertainty change (SS) relative to uncompressed baselines for five models across all compression methods and tasks. If accuracy and uncertainty were coupled, points would concentrate along a consistent negative-slope trend; instead, substantial dispersion is observed in all subplots, confirming that compression frequently decouples the two metrics (Finding 1). Comparing across subplots, the scatter contracts toward the origin as model scale increases, further illustrating that larger models absorb compression-induced uncertainty more effectively (Finding 2)."
+    ],
+    [
+     "E3",
+     "To answer this question, we benchmark 12 LLMs under various compression configurations across five NLP tasks, using conformal prediction to provide a rigorous, distribution-free measure of uncertainty. Our experiments reveal that: (I) compression frequently decouples accuracy from uncertainty; (II) larger models absorb compression-induced uncertainty far more effectively than smaller ones; and (III) uncertainty inflation is often threshold-like rather than gradual. These results suggest that accuracy-only evaluation is insufficient for assessing the deployment readiness of compressed LLMs, and that uncertainty-aware benchmarking should be a standard component of model compression pipelines."
+    ],
+    [
+     "E4",
+     "Does Compression Preserve Uncertainty? A Unified Benchmark for Quantized and Sparse LLMs via Conformal Prediction Yujia Tong \u2020\u2020thanks: Equal contribution. Affiliation: Wuhan University of Technology Yuxi Wang11footnotemark: 1 Affiliation: Wuhan University of Technology Yunyang Wan Affiliation: Wuhan University of Technology Tian Zhang Affiliation: Wuhan University of Technology Junhao Dong \u2020\u2020thanks: Corresponding author."
+    ],
+    [
+     "E5",
+     "As compressed models are increasingly deployed in safety-critical settings such as medical diagnosis, legal reasoning, and autonomous decision-making, evaluating them solely by accuracy risks overlooking silent degradations in reliability that only surface as inflated uncertainty. Our analysis reveals that compression may decouple accuracy from uncertainty, that model scale tends to buffer compression-induced uncertainty inflation, and that this inflation is often threshold-like rather than gradual. Together, these findings establish uncertainty as an indispensable axis for evaluating compressed LLMs and motivate a rethinking of how compression methods are designed and selected."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: Does Compression Preserve Uncertainty? A Unified Benchmark for Quantized and Sparse LLMs via Conformal Prediction (Tong, Wang, Wan, Zhang et al., 2026)\nSENTENCE: Tong et al. show that compression frequently decouples accuracy from uncertainty. [the cited paper]\nEXCERPTS:\n[E1] Model compression techniques such as quantization and pruning are widely used to reduce the deployment cost of large language models (LLMs), with existing evaluations focusing almost exclusively on accuracy preservation. However, in safety-critical applications, a model's ability to reliably quantify its own uncertainty is equally important. We ask: does compression preserve this ability? To answer this question, we benchmark 12 LLMs under various compression configurations across five NLP tasks, using conformal prediction to provide a rigorous, distribution-free measure of uncertainty. Our experiments reveal that: (I) compression frequently decouples accuracy from uncertainty; (II) larger models absorb compression-induced uncertainty far more effectively than smaller ones; and (III) uncertainty inflation is often threshold-like rather than gradual. These results suggest that accuracy-only evaluation is insufficient for assessing the deployment readiness of compressed LLMs, and that uncertainty-aware benchmarking should be a standard component of model compression pipelines.\n[E2] Figure 2: Accuracy change (Acc) vs. uncertainty change (SS) relative to uncompressed baselines for five models across all compression methods and tasks. If accuracy and uncertainty were coupled, points would concentrate along a consistent negative-slope trend; instead, substantial dispersion is observed in all subplots, confirming that compression frequently decouples the two metrics (Finding 1). Comparing across subplots, the scatter contracts toward the origin as model scale increases, further illustrating that larger models absorb compression-induced uncertainty more effectively (Finding 2).\n[E3] To answer this question, we benchmark 12 LLMs under various compression configurations across five NLP tasks, using conformal prediction to provide a rigorous, distribution-free measure of uncertainty. Our experiments reveal that: (I) compression frequently decouples accuracy from uncertainty; (II) larger models absorb compression-induced uncertainty far more effectively than smaller ones; and (III) uncertainty inflation is often threshold-like rather than gradual. These results suggest that accuracy-only evaluation is insufficient for assessing the deployment readiness of compressed LLMs, and that uncertainty-aware benchmarking should be a standard component of model compression pipelines.\n[E4] Does Compression Preserve Uncertainty? A Unified Benchmark for Quantized and Sparse LLMs via Conformal Prediction Yujia Tong \u2020\u2020thanks: Equal contribution. Affiliation: Wuhan University of Technology Yuxi Wang11footnotemark: 1 Affiliation: Wuhan University of Technology Yunyang Wan Affiliation: Wuhan University of Technology Tian Zhang Affiliation: Wuhan University of Technology Junhao Dong \u2020\u2020thanks: Corresponding author.\n[E5] As compressed models are increasingly deployed in safety-critical settings such as medical diagnosis, legal reasoning, and autonomous decision-making, evaluating them solely by accuracy risks overlooking silent degradations in reliability that only surface as inflated uncertainty. Our analysis reveals that compression may decouple accuracy from uncertainty, that model scale tends to buffer compression-induced uncertainty inflation, and that this inflation is often threshold-like rather than gradual. Together, these findings establish uncertainty as an indispensable axis for evaluating compressed LLMs and motivate a rethinking of how compression methods are designed and selected.",
+     "reply": "{\"verdict\": \"SUPPORTED\", \"excerpt\": \"compression frequently decouples accuracy from uncertainty\", \"reason\": \"The paper directly states this finding verbatim, matching the sentence's claim.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "tong_models",
+   "repeat": 0,
+   "expect": "MAY_SUPPORT",
+   "origin": "real",
+   "sentence": "Tong et al. benchmark 12 LLMs from 1B to 70B parameters under quantization and pruning.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "We evaluate 12 LLMs spanning four model families and scales from 1B to 70B parameters under various compression configurations across five NLP tasks.",
+   "reason": "The excerpt confirms 12 LLMs from 1B to 70B parameters benchmarked under quantization and pruning configurations.",
+   "note": "the model said SUPPORTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "Model compression techniques such as quantization and pruning are widely used to reduce the deployment cost of large language models (LLMs), with existing evaluations focusing almost exclusively on accuracy preservation. However, in safety-critical applications, a model's ability to reliably quantify its own uncertainty is equally important. We ask: does compression preserve this ability? To answer this question, we benchmark 12 LLMs under various compression configurations across five NLP tasks, using conformal prediction to provide a rigorous, distribution-free measure of uncertainty. Our experiments reveal that: (I) compression frequently decouples accuracy from uncertainty; (II) larger models absorb compression-induced uncertainty far more effectively than smaller ones; and (III) uncertainty inflation is often threshold-like rather than gradual. These results suggest that accuracy-only evaluation is insufficient for assessing the deployment readiness of compressed LLMs, and that uncertainty-aware benchmarking should be a standard component of model compression pipelines."
+    ],
+    [
+     "E2",
+     "Does Compression Preserve Uncertainty? A Unified Benchmark for Quantized and Sparse LLMs via Conformal Prediction Yujia Tong \u2020\u2020thanks: Equal contribution. Affiliation: Wuhan University of Technology Yuxi Wang11footnotemark: 1 Affiliation: Wuhan University of Technology Yunyang Wan Affiliation: Wuhan University of Technology Tian Zhang Affiliation: Wuhan University of Technology Junhao Dong \u2020\u2020thanks: Corresponding author."
+    ],
+    [
+     "E3",
+     "Our main contributions can be summarized as follows: \u2022 A new evaluation perspective. We are the first to systematically evaluate the uncertainty of compressed LLMs through the lens of conformal prediction, providing a distribution-free and statistically principled measure of how compression affects model reliability beyond accuracy. \u2022 A unified benchmark across compression paradigms. We construct a comprehensive benchmark covering 12 LLMs from four families (1B to 70B parameters), various compression configurations spanning weight-only quantization, weight-activation quantization, unstructured pruning, and structured pruning, evaluated on five standard NLP tasks under an identical protocol that isolates the effect of compression. \u2022 Three key findings with practical implications."
+    ],
+    [
+     "E4",
+     "Among them, quantization and pruning represent two dominant and complementary paradigms. Quantization methods [10, 11, 12, 13, 14] reduce memory footprint by lowering the numerical precision of model weights, while pruning [15, 16, 17] approaches eliminate redundant parameters or structures to yield sparse, efficient models. While extensive efforts have been devoted to preserving task accuracy under compression, a critical yet underexplored question remains: do compressed LLMs still produce reliable uncertainty estimates?"
+    ],
+    [
+     "E5",
+     "Our benchmark encompasses two major compression paradigms, quantization and pruning, covering a broad spectrum of representative methods. We evaluate 12 LLMs spanning four model families and scales from 1B to 70B parameters under various compression configurations across five NLP tasks. Through systematic analysis, we uncover three findings that challenge the common assumption that accuracy preservation implies uncertainty preservation under compression."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: Does Compression Preserve Uncertainty? A Unified Benchmark for Quantized and Sparse LLMs via Conformal Prediction (Tong, Wang, Wan, Zhang et al., 2026)\nSENTENCE: Tong et al. benchmark 12 LLMs from 1B to 70B parameters under quantization and pruning. [the cited paper]\nEXCERPTS:\n[E1] Model compression techniques such as quantization and pruning are widely used to reduce the deployment cost of large language models (LLMs), with existing evaluations focusing almost exclusively on accuracy preservation. However, in safety-critical applications, a model's ability to reliably quantify its own uncertainty is equally important. We ask: does compression preserve this ability? To answer this question, we benchmark 12 LLMs under various compression configurations across five NLP tasks, using conformal prediction to provide a rigorous, distribution-free measure of uncertainty. Our experiments reveal that: (I) compression frequently decouples accuracy from uncertainty; (II) larger models absorb compression-induced uncertainty far more effectively than smaller ones; and (III) uncertainty inflation is often threshold-like rather than gradual. These results suggest that accuracy-only evaluation is insufficient for assessing the deployment readiness of compressed LLMs, and that uncertainty-aware benchmarking should be a standard component of model compression pipelines.\n[E2] Does Compression Preserve Uncertainty? A Unified Benchmark for Quantized and Sparse LLMs via Conformal Prediction Yujia Tong \u2020\u2020thanks: Equal contribution. Affiliation: Wuhan University of Technology Yuxi Wang11footnotemark: 1 Affiliation: Wuhan University of Technology Yunyang Wan Affiliation: Wuhan University of Technology Tian Zhang Affiliation: Wuhan University of Technology Junhao Dong \u2020\u2020thanks: Corresponding author.\n[E3] Our main contributions can be summarized as follows: \u2022 A new evaluation perspective. We are the first to systematically evaluate the uncertainty of compressed LLMs through the lens of conformal prediction, providing a distribution-free and statistically principled measure of how compression affects model reliability beyond accuracy. \u2022 A unified benchmark across compression paradigms. We construct a comprehensive benchmark covering 12 LLMs from four families (1B to 70B parameters), various compression configurations spanning weight-only quantization, weight-activation quantization, unstructured pruning, and structured pruning, evaluated on five standard NLP tasks under an identical protocol that isolates the effect of compression. \u2022 Three key findings with practical implications.\n[E4] Among them, quantization and pruning represent two dominant and complementary paradigms. Quantization methods [10, 11, 12, 13, 14] reduce memory footprint by lowering the numerical precision of model weights, while pruning [15, 16, 17] approaches eliminate redundant parameters or structures to yield sparse, efficient models. While extensive efforts have been devoted to preserving task accuracy under compression, a critical yet underexplored question remains: do compressed LLMs still produce reliable uncertainty estimates?\n[E5] Our benchmark encompasses two major compression paradigms, quantization and pruning, covering a broad spectrum of representative methods. We evaluate 12 LLMs spanning four model families and scales from 1B to 70B parameters under various compression configurations across five NLP tasks. Through systematic analysis, we uncover three findings that challenge the common assumption that accuracy preservation implies uncertainty preservation under compression.",
+     "reply": "{\"verdict\": \"SUPPORTED\", \"excerpt\": \"We evaluate 12 LLMs spanning four model families and scales from 1B to 70B parameters under various compression configurations across five NLP tasks.\", \"reason\": \"The excerpt confirms 12 LLMs from 1B to 70B parameters benchmarked under quantization and pruning configurations.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "jin_selection",
+   "repeat": 0,
+   "expect": "MAY_SUPPORT",
+   "origin": "real",
+   "sentence": "Jin and Ren construct prediction sets with finite-sample coverage conditional on the unit being selected.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "This paper presents a general framework for constructing a prediction set with finite-sample exact coverage, conditional on the unit being selected by a given procedure.",
+   "reason": "The excerpt directly states the paper constructs prediction sets with finite-sample exact coverage conditional on selection, matching the sentence.",
+   "note": "the model said SUPPORTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "Conformal prediction builds marginally valid prediction intervals that cover the unknown outcome of a randomly drawn test point with a prescribed probability. However, in practice, data-driven methods are often used to identify specific test unit(s) of interest, requiring uncertainty quantification tailored to these focal units. In such cases, marginally valid conformal prediction intervals may fail to provide valid coverage for the focal unit(s) due to selection bias. This paper presents a general framework for constructing a prediction set with finite-sample exact coverage, conditional on the unit being selected by a given procedure. The general form of our method accommodates arbitrary selection rules that are invariant to the permutation of the calibration units, and generalizes Mondrian Conformal Prediction to multiple test units and non-equivariant classifiers. We also work out computationally efficient implementation of our framework for a number of realistic selection rules, including top-K selection, optimization-based selection, selection based on conformal p-values, and selection based on properties of preliminary conformal prediction sets. The performance of our methods is demonstrated via applications in drug discovery and health risk prediction."
+    ],
+    [
+     "E2",
+     "In such cases, marginally valid conformal prediction intervals may fail to provide valid coverage for the focal unit(s) due to selection bias. This paper presents a general framework for constructing a prediction set with finite-sample exact coverage, conditional on the unit being selected by a given procedure. The general form of our method accommodates arbitrary selection rules that are invariant to the permutation of the calibration units, and generalizes Mondrian Conformal Prediction to multiple test units and non-equivariant classifiers."
+    ],
+    [
+     "E3",
+     "We derive efficient implementation for a class of selection rules based on thresholding conformal p-values with \u201cstopping time-type\u201d cutoffs. For instance, our prediction set is finite-sample exactly valid for units selected by the Conformal Selection method (Jin and Cand\u00e8s, 2023b, ), which is studied in Bao et al., (2024) with approximate FCR guarantee. \u2022 Selection based on preliminary conformal prediction sets. In addition, we derive a general, efficient instantiation when selecting units whose marginal prediction sets demonstrate certain interesting properties, such as being of a short length, or having a lower bound above some threshold."
+    ],
+    [
+     "E4",
+     "We refer to Lemma 1 in the supplementary material for such an instance. 3 JOMI: a unified framework 3.1 Warm-up: split conformal prediction To warm up, we briefly summarize the split conformal prediction (SCP) method (Vovk et al.,, 2005; Lei et al.,, 2018) and how it achieves finite-sample coverage under exchangeability. SCP starts with a nonconformity score function determined by , so that informs how well a hypothetical value conforms to a machine prediction."
+    ],
+    [
+     "E5",
+     "5.2 Conformal selection We then consider conformal selection, where the focal test units are those believed to obey with false discovery rate control at level . This problem was investigated in Bao et al., (2024) with no exact finite-sample coverage guarantees in theory (though their heuristic method performs reasonably in their empirical studies). We apply conformal selection (Jin and Cand\u00e8s, 2023b, ) at FDR level and to determine , and construct prediction intervals for units in using both the APS score and the binary score."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: Confidence on the Focal: Conformal Prediction with Selection-Conditional Coverage (Jin, Ren, 2024)\nSENTENCE: Jin and Ren construct prediction sets with finite-sample coverage conditional on the unit being selected. [the cited paper]\nEXCERPTS:\n[E1] Conformal prediction builds marginally valid prediction intervals that cover the unknown outcome of a randomly drawn test point with a prescribed probability. However, in practice, data-driven methods are often used to identify specific test unit(s) of interest, requiring uncertainty quantification tailored to these focal units. In such cases, marginally valid conformal prediction intervals may fail to provide valid coverage for the focal unit(s) due to selection bias. This paper presents a general framework for constructing a prediction set with finite-sample exact coverage, conditional on the unit being selected by a given procedure. The general form of our method accommodates arbitrary selection rules that are invariant to the permutation of the calibration units, and generalizes Mondrian Conformal Prediction to multiple test units and non-equivariant classifiers. We also work out computationally efficient implementation of our framework for a number of realistic selection rules, including top-K selection, optimization-based selection, selection based on conformal p-values, and selection based on properties of preliminary conformal prediction sets. The performance of our methods is demonstrated via applications in drug discovery and health risk prediction.\n[E2] In such cases, marginally valid conformal prediction intervals may fail to provide valid coverage for the focal unit(s) due to selection bias. This paper presents a general framework for constructing a prediction set with finite-sample exact coverage, conditional on the unit being selected by a given procedure. The general form of our method accommodates arbitrary selection rules that are invariant to the permutation of the calibration units, and generalizes Mondrian Conformal Prediction to multiple test units and non-equivariant classifiers.\n[E3] We derive efficient implementation for a class of selection rules based on thresholding conformal p-values with \u201cstopping time-type\u201d cutoffs. For instance, our prediction set is finite-sample exactly valid for units selected by the Conformal Selection method (Jin and Cand\u00e8s, 2023b, ), which is studied in Bao et al., (2024) with approximate FCR guarantee. \u2022 Selection based on preliminary conformal prediction sets. In addition, we derive a general, efficient instantiation when selecting units whose marginal prediction sets demonstrate certain interesting properties, such as being of a short length, or having a lower bound above some threshold.\n[E4] We refer to Lemma 1 in the supplementary material for such an instance. 3 JOMI: a unified framework 3.1 Warm-up: split conformal prediction To warm up, we briefly summarize the split conformal prediction (SCP) method (Vovk et al.,, 2005; Lei et al.,, 2018) and how it achieves finite-sample coverage under exchangeability. SCP starts with a nonconformity score function determined by , so that informs how well a hypothetical value conforms to a machine prediction.\n[E5] 5.2 Conformal selection We then consider conformal selection, where the focal test units are those believed to obey with false discovery rate control at level . This problem was investigated in Bao et al., (2024) with no exact finite-sample coverage guarantees in theory (though their heuristic method performs reasonably in their empirical studies). We apply conformal selection (Jin and Cand\u00e8s, 2023b, ) at FDR level and to determine , and construct prediction intervals for units in using both the APS score and the binary score.",
+     "reply": "{\"verdict\": \"SUPPORTED\", \"excerpt\": \"This paper presents a general framework for constructing a prediction set with finite-sample exact coverage, conditional on the unit being selected by a given procedure.\", \"reason\": \"The excerpt directly states the paper constructs prediction sets with finite-sample exact coverage conditional on selection, matching the sentence.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "kurtic_v1",
+   "repeat": 0,
+   "expect": "MAY_SUPPORT",
+   "origin": "real",
+   "sentence": "Kurti\u0107 et al. report that all quantization schemes recover over 99% of the average score on the OpenLLM Leaderboard v1.",
+   "verdict": "SUPPORTED",
+   "quote": "all quantization schemes\u2014regardless of model size\u2014recover over 99% of the average score achieved by the unquantized baseline",
+   "excerpt": "E1",
+   "reason": "The excerpt directly states this exact finding for OpenLLM Leaderboard v1, matching the sentence's claim.",
+   "note": "",
+   "windows": [
+    [
+     "E1",
+     "The Leaderboard v1 benchmark consists of a diverse range of topics, including: Grade school math: GSM8k World knowledge and reasoning: MMLU, ARC-Challenge Language understanding: Winogrande, HellaSwag Truthfulness: TruthfulQA. As illustrated in Figure 2 (left) below, all quantization schemes\u2014regardless of model size\u2014recover over 99% of the average score achieved by the unquantized baseline. Figure 2: OpenLLM Leaderboard v1 (left) and v2 (right) average scores for baseline (BF16) and various quantized versions of Llama 3.1 (405B, 70B, and 8B)."
+    ],
+    [
+     "E2",
+     "The benchmarks in v2 include more complex topics, such as: Expert knowledge and reasoning: MMLU-Pro, GPQA, Big Bench Hard Multistep reasoning: MuSR Advanced math problems: MATH Level 5 Instruction following: IFEval. As illustrated in Figure 2 (right) above, the quantized models recover close to 99% of the baseline\u2019s average score on average, with all models maintaining at least 96% recovery. However, the increased difficulty of these tasks, especially for smaller models, resulted in higher variance for benchmarks like GPQA and MuSR, where scores approached the random guessing threshold even for the full-precision baseline."
+    ],
+    [
+     "E3",
+     "Skip to main content Search We ran over half a million evaluations on quantized LLMs\u2014here's what we found October 17, 2024 Eldar Kurti\u0107 Alexandre Marques Mark Kurtz Dan Alistarh Related topics: Artificial intelligence Related products: Red Hat AI Quantizing models to lower precision formats, such as 8-bit or 4-bit, significantly reduces computational costs and accelerates inference. However, there has been a persistent question of whether these quantized models retain the same level of accuracy and quality. Recently, the machine learning (ML) community has raised significant concerns about whether quantized large language models (LLMs) can truly compete with their uncompressed counterparts in accuracy and the general quality of generated responses."
+    ],
+    [
+     "E4",
+     "We evaluated OpenLLM Leaderboard v1 by utilizing Meta\u2019s prompts for the Llama-3.1 models. We base our comparisons and recovery percentages on the average score and report a full per-task breakdown of results in our HuggingFace model collection. The Leaderboard v1 benchmark consists of a diverse range of topics, including: Grade school math: GSM8k World knowledge and reasoning: MMLU, ARC-Challenge Language understanding: Winogrande, HellaSwag Truthfulness: TruthfulQA."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: We ran over half a million evaluations on quantized LLMs\u2014here's what we found | Red Hat Developer ()\nSENTENCE: Kurti\u0107 et al. report that all quantization schemes recover over 99% of the average score on the OpenLLM Leaderboard v1. [the cited paper]\nEXCERPTS:\n[E1] The Leaderboard v1 benchmark consists of a diverse range of topics, including: Grade school math: GSM8k World knowledge and reasoning: MMLU, ARC-Challenge Language understanding: Winogrande, HellaSwag Truthfulness: TruthfulQA. As illustrated in Figure 2 (left) below, all quantization schemes\u2014regardless of model size\u2014recover over 99% of the average score achieved by the unquantized baseline. Figure 2: OpenLLM Leaderboard v1 (left) and v2 (right) average scores for baseline (BF16) and various quantized versions of Llama 3.1 (405B, 70B, and 8B).\n[E2] The benchmarks in v2 include more complex topics, such as: Expert knowledge and reasoning: MMLU-Pro, GPQA, Big Bench Hard Multistep reasoning: MuSR Advanced math problems: MATH Level 5 Instruction following: IFEval. As illustrated in Figure 2 (right) above, the quantized models recover close to 99% of the baseline\u2019s average score on average, with all models maintaining at least 96% recovery. However, the increased difficulty of these tasks, especially for smaller models, resulted in higher variance for benchmarks like GPQA and MuSR, where scores approached the random guessing threshold even for the full-precision baseline.\n[E3] Skip to main content Search We ran over half a million evaluations on quantized LLMs\u2014here's what we found October 17, 2024 Eldar Kurti\u0107 Alexandre Marques Mark Kurtz Dan Alistarh Related topics: Artificial intelligence Related products: Red Hat AI Quantizing models to lower precision formats, such as 8-bit or 4-bit, significantly reduces computational costs and accelerates inference. However, there has been a persistent question of whether these quantized models retain the same level of accuracy and quality. Recently, the machine learning (ML) community has raised significant concerns about whether quantized large language models (LLMs) can truly compete with their uncompressed counterparts in accuracy and the general quality of generated responses.\n[E4] We evaluated OpenLLM Leaderboard v1 by utilizing Meta\u2019s prompts for the Llama-3.1 models. We base our comparisons and recovery percentages on the average score and report a full per-task breakdown of results in our HuggingFace model collection. The Leaderboard v1 benchmark consists of a diverse range of topics, including: Grade school math: GSM8k World knowledge and reasoning: MMLU, ARC-Challenge Language understanding: Winogrande, HellaSwag Truthfulness: TruthfulQA.",
+     "reply": "{\"verdict\": \"SUPPORTED\", \"excerpt\": \"E1\", \"quote\": \"all quantization schemes\\u2014regardless of model size\\u2014recover over 99% of the average score achieved by the unquantized baseline\", \"reason\": \"The excerpt directly states this exact finding for OpenLLM Leaderboard v1, matching the sentence's claim.\"}"
+    },
+    {
+     "system_is_challenge": true,
+     "user": "CITED PAPER: We ran over half a million evaluations on quantized LLMs\u2014here's what we found | Red Hat Developer ()\nSENTENCE: Kurti\u0107 et al. report that all quantization schemes recover over 99% of the average score on the OpenLLM Leaderboard v1. [the cited paper]\nEXCERPTS:\n[E1] The Leaderboard v1 benchmark consists of a diverse range of topics, including: Grade school math: GSM8k World knowledge and reasoning: MMLU, ARC-Challenge Language understanding: Winogrande, HellaSwag Truthfulness: TruthfulQA. As illustrated in Figure 2 (left) below, all quantization schemes\u2014regardless of model size\u2014recover over 99% of the average score achieved by the unquantized baseline. Figure 2: OpenLLM Leaderboard v1 (left) and v2 (right) average scores for baseline (BF16) and various quantized versions of Llama 3.1 (405B, 70B, and 8B).\n[E2] The benchmarks in v2 include more complex topics, such as: Expert knowledge and reasoning: MMLU-Pro, GPQA, Big Bench Hard Multistep reasoning: MuSR Advanced math problems: MATH Level 5 Instruction following: IFEval. As illustrated in Figure 2 (right) above, the quantized models recover close to 99% of the baseline\u2019s average score on average, with all models maintaining at least 96% recovery. However, the increased difficulty of these tasks, especially for smaller models, resulted in higher variance for benchmarks like GPQA and MuSR, where scores approached the random guessing threshold even for the full-precision baseline.\n[E3] Skip to main content Search We ran over half a million evaluations on quantized LLMs\u2014here's what we found October 17, 2024 Eldar Kurti\u0107 Alexandre Marques Mark Kurtz Dan Alistarh Related topics: Artificial intelligence Related products: Red Hat AI Quantizing models to lower precision formats, such as 8-bit or 4-bit, significantly reduces computational costs and accelerates inference. However, there has been a persistent question of whether these quantized models retain the same level of accuracy and quality. Recently, the machine learning (ML) community has raised significant concerns about whether quantized large language models (LLMs) can truly compete with their uncompressed counterparts in accuracy and the general quality of generated responses.\n[E4] We evaluated OpenLLM Leaderboard v1 by utilizing Meta\u2019s prompts for the Llama-3.1 models. We base our comparisons and recovery percentages on the average score and report a full per-task breakdown of results in our HuggingFace model collection. The Leaderboard v1 benchmark consists of a diverse range of topics, including: Grade school math: GSM8k World knowledge and reasoning: MMLU, ARC-Challenge Language understanding: Winogrande, HellaSwag Truthfulness: TruthfulQA.",
+     "reply": "{\"finding\": \"NONE\", \"excerpt\": \"E1\", \"quote\": \"all quantization schemes\u2014regardless of model size\u2014recover over 99% of the average score achieved by the unquantized baseline\", \"reason\": \"This directly supports the sentence's claim about v1 without qualification.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "gupta_discarded",
+   "repeat": 0,
+   "expect": "MAY_SUPPORT",
+   "origin": "real",
+   "sentence": "Gupta and MacAvaney show that annotators could not find answers to 38-45% of MS MARCO queries, which were then discarded.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "We observed that annotators could not identify answers for 38\u201345% of queries, which are subsequently discarded in the MS MARCO passage and document ranking tasks.",
+   "reason": "The paper directly states annotators could not find answers to 38-45% of queries which were then discarded, matching the sentence exactly.",
+   "note": "the model said SUPPORTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "Survivorship bias is the tendency to concentrate on the positive outcomes of a selection process and overlook the results that generate negative outcomes. We observe that this bias could be present in the popular MS MARCO dataset, given that annotators could not find answers to 38--45% of the queries, leading to these queries being discarded in training and evaluation processes. Although we find that some discarded queries in MS MARCO are ill-defined or otherwise unanswerable, many are valid questions that could be answered had the collection been annotated more completely (around two thirds using modern ranking techniques). This survivability problem distorts the MS MARCO collection in several ways. We find that it affects the natural distribution of queries in terms of the type of information needed. When used for evaluation, we find that the bias likely yields a significant distortion of the absolute performance scores observed. Finally, given that MS MARCO is frequently used for model training, we train models based on subsets of MS MARCO that simulates more survivorship bias. We find that models trained in this setting are up to 9.9% worse when evaluated on versions of the dataset with more complete annotations, and up to 3.5% worse at zero-shot transfer. Our findings are complementary to other recent suggestions for further annotation of MS MARCO, but with a focus on discarded queries. Code and data for reproducing the results of this paper are available in an online appendix."
+    ],
+    [
+     "E2",
+     "On Survivorship Bias in MS MARCO Conference: Proceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval; July 11\u201315, 2022; Madrid, SpainProceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR \u201922), July 11\u201315, 2022, Madrid, SpainPrice: 15.00DOI: 10.1145/3477495.3531832ISBN: 978-1-4503-8732-3/22/07CCS: Information systems Information retrievalCCS: Information systems Evaluation of retrieval results Prashansa Gupta Affiliation: University of Glasgow, Glasgow, United Kingdom email: 2539575G@student.gla.ac.uk and Sean MacAvaney Affiliation: University of Glasgow, Glasgow, United Kingdom email: sean.macavaney@glasgow.ac.uk \u00a9 acmcopyright Abstract. Survivorship bias is the tendency to concentrate on the positive outcomes of a selection process and overlook the results that generate negative outcomes."
+    ],
+    [
+     "E3",
+     "Discussion and Conclusion In this paper, we delved into the problem of survivorship bias in MS MARCO, a popular dataset used for training and evaluating IR systems. We observed that annotators could not identify answers for 38\u201345% of queries, which are subsequently discarded in the MS MARCO passage and document ranking tasks. Through an analysis of a sample of the discarded queries, we found that by far the most common reason that queries were discarded was simply that complete answers were presented to the annotators."
+    ],
+    [
+     "E4",
+     "Survivorship bias is the tendency to concentrate on the positive outcomes of a selection process and overlook the results that generate negative outcomes. We observe that this bias could be present in the popular MS MARCO dataset, given that annotators could not find answers to 38\u201345% of the queries, leading to these queries being discarded in training and evaluation processes. Although we find that some discarded queries in MS MARCO are ill-defined or otherwise unanswerable, many are valid questions that could be answered had the collection been annotated more completely (around two thirds using modern ranking techniques)."
+    ],
+    [
+     "E5",
+     "Since queries marked as having \u201cNo Answer Present\u201d have no associated relevant ground truth passages, these queries are discarded for the purposes of passage and document ranking. In other words, queries where the answer could not be found in the top 10 results of a single system (38% of queries in train and 45% in dev) are discarded and therefore not used for training or evaluation of ranking systems. Since the document task is simply a derivation of the passage task, we focus our study on the latter."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: On Survivorship Bias in MS MARCO (Gupta, Macavaney, 2022)\nSENTENCE: Gupta and MacAvaney show that annotators could not find answers to 38-45% of MS MARCO queries, which were then discarded. [the cited paper]\nEXCERPTS:\n[E1] Survivorship bias is the tendency to concentrate on the positive outcomes of a selection process and overlook the results that generate negative outcomes. We observe that this bias could be present in the popular MS MARCO dataset, given that annotators could not find answers to 38--45% of the queries, leading to these queries being discarded in training and evaluation processes. Although we find that some discarded queries in MS MARCO are ill-defined or otherwise unanswerable, many are valid questions that could be answered had the collection been annotated more completely (around two thirds using modern ranking techniques). This survivability problem distorts the MS MARCO collection in several ways. We find that it affects the natural distribution of queries in terms of the type of information needed. When used for evaluation, we find that the bias likely yields a significant distortion of the absolute performance scores observed. Finally, given that MS MARCO is frequently used for model training, we train models based on subsets of MS MARCO that simulates more survivorship bias. We find that models trained in this setting are up to 9.9% worse when evaluated on versions of the dataset with more complete annotations, and up to 3.5% worse at zero-shot transfer. Our findings are complementary to other recent suggestions for further annotation of MS MARCO, but with a focus on discarded queries. Code and data for reproducing the results of this paper are available in an online appendix.\n[E2] On Survivorship Bias in MS MARCO Conference: Proceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval; July 11\u201315, 2022; Madrid, SpainProceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR \u201922), July 11\u201315, 2022, Madrid, SpainPrice: 15.00DOI: 10.1145/3477495.3531832ISBN: 978-1-4503-8732-3/22/07CCS: Information systems Information retrievalCCS: Information systems Evaluation of retrieval results Prashansa Gupta Affiliation: University of Glasgow, Glasgow, United Kingdom email: 2539575G@student.gla.ac.uk and Sean MacAvaney Affiliation: University of Glasgow, Glasgow, United Kingdom email: sean.macavaney@glasgow.ac.uk \u00a9 acmcopyright Abstract. Survivorship bias is the tendency to concentrate on the positive outcomes of a selection process and overlook the results that generate negative outcomes.\n[E3] Discussion and Conclusion In this paper, we delved into the problem of survivorship bias in MS MARCO, a popular dataset used for training and evaluating IR systems. We observed that annotators could not identify answers for 38\u201345% of queries, which are subsequently discarded in the MS MARCO passage and document ranking tasks. Through an analysis of a sample of the discarded queries, we found that by far the most common reason that queries were discarded was simply that complete answers were presented to the annotators.\n[E4] Survivorship bias is the tendency to concentrate on the positive outcomes of a selection process and overlook the results that generate negative outcomes. We observe that this bias could be present in the popular MS MARCO dataset, given that annotators could not find answers to 38\u201345% of the queries, leading to these queries being discarded in training and evaluation processes. Although we find that some discarded queries in MS MARCO are ill-defined or otherwise unanswerable, many are valid questions that could be answered had the collection been annotated more completely (around two thirds using modern ranking techniques).\n[E5] Since queries marked as having \u201cNo Answer Present\u201d have no associated relevant ground truth passages, these queries are discarded for the purposes of passage and document ranking. In other words, queries where the answer could not be found in the top 10 results of a single system (38% of queries in train and 45% in dev) are discarded and therefore not used for training or evaluation of ranking systems. Since the document task is simply a derivation of the passage task, we focus our study on the latter.",
+     "reply": "{\"verdict\": \"SUPPORTED\", \"excerpt\": \"We observed that annotators could not identify answers for 38\u201345% of queries, which are subsequently discarded in the MS MARCO passage and document ranking tasks.\", \"reason\": \"The paper directly states annotators could not find answers to 38-45% of queries which were then discarded, matching the sentence exactly.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "gptq_bits",
+   "repeat": 0,
+   "expect": "MAY_SUPPORT",
+   "origin": "real",
+   "sentence": "GPTQ quantizes the weights of very large language models to 3 or 4 bits per weight.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "Specifically, GPTQ can quantize GPT models with 175 billion parameters in approximately four GPU hours, reducing the bitwidth down to 3 or 4 bits per weight, with negligible accuracy degradation relative to the uncompressed baseline.",
+   "reason": "The excerpt directly states GPTQ quantizes weights of very large GPT models to 3 or 4 bits per weight.",
+   "note": "the model said SUPPORTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "Generative Pre-trained Transformer models, known as GPT or OPT, set themselves apart through breakthrough performance across complex language modelling tasks, but also by their extremely high computational and storage costs. Specifically, due to their massive size, even inference for large, highly-accurate GPT models may require multiple performant GPUs, which limits the usability of such models. While there is emerging work on relieving this pressure via model compression, the applicability and performance of existing compression techniques is limited by the scale and complexity of GPT models. In this paper, we address this challenge, and propose GPTQ, a new one-shot weight quantization method based on approximate second-order information, that is both highly-accurate and highly-efficient. Specifically, GPTQ can quantize GPT models with 175 billion parameters in approximately four GPU hours, reducing the bitwidth down to 3 or 4 bits per weight, with negligible accuracy degradation relative to the uncompressed baseline. Our method more than doubles the compression gains relative to previously-proposed one-shot quantization methods, preserving accuracy, allowing us for the first time to execute an 175 billion-parameter model inside a single GPU for generative inference. Moreover, we also show that our method can still provide reasonable accuracy in the extreme quantization regime, in which weights are quantized to 2-bit or even ternary quantization levels. We show experimentally that these improvements can be leveraged for end-to-end inference speedups over FP16, of around 3.25x when using high-end GPUs (NVIDIA A100) and 4.5x when using more cost-effective ones (NVIDIA A6000). The implementation is available at https://github.com/IST-DASLab/gptq."
+    ],
+    [
+     "E2",
+     "While this leads to worse compression on average relative to the 2-bit numbers above, this pattern could be efficiently implemented on custom hardware such as FPGAs. In summary, these results are an encouraging first step towards pushing highly-accurate one-shot compression of very large language models, even lower than 3 bits per value on average. 6 Summary and Limitations We have presented GPTQ, an approximate second-order method for quantizing truly large language models."
+    ],
+    [
+     "E3",
+     "We thank the Swiss National Supercomputing Center (CSCS) for supporting us with compute infrastructure. 7 Ethics Statement Our work introduces a general method for compressing large language models (LLMs) via quantization, with little-to-no accuracy loss in terms of standard accuracy metrics such as perplexity. Our method is task-agnostic, as it only uses a tiny amount of randomly-chosen data for calibration."
+    ],
+    [
+     "E4",
+     "Our primary baseline, denoted by RTN, consists of rounding all weights to the nearest quantized value on exactly the same asymmetric per-row grid that is also used for GPTQ, meaning that it corresponds precisely to the state-of-the-art weight quantization of LLM.int8(). This is currently the method of choice in all works on quantization of very large language models (Dettmers et al., 2022; Yao et al., 2022; Park et al., 2022): its runtime scales well to networks with many billions of parameters, as it simply performs direct rounding. As we will also discuss further, more accurate methods, such as AdaRound (Nagel et al., 2020) or BRECQ (Li et al., 2021), are currently too slow for models with many billions of parameters, the main focus of this work."
+    ],
+    [
+     "E5",
+     "Formally, this can be restated as (1) Further, similar to (Nagel et al., 2020; Li et al., 2021; Frantar et al., 2022), we assume that the quantization grid for is fixed before the process, and that individual weights can move freely as in (Hubara et al., 2021; Frantar et al., 2022). Our approach builds on the recently-proposed Optimal Brain Quanization (OBQ) method (Frantar et al., 2022) for solving the layer-wise quantization problem defined above, to which we perform a series of major modifications, which allow it to scale to large language models, providing more than three orders of magnitude computational speedup. To aid understanding, we first briefly summarize the original OBQ method."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers (Frantar, Ashkboos, Hoefler, Alistarh, 2022)\nSENTENCE: GPTQ quantizes the weights of very large language models to 3 or 4 bits per weight. [the cited paper]\nEXCERPTS:\n[E1] Generative Pre-trained Transformer models, known as GPT or OPT, set themselves apart through breakthrough performance across complex language modelling tasks, but also by their extremely high computational and storage costs. Specifically, due to their massive size, even inference for large, highly-accurate GPT models may require multiple performant GPUs, which limits the usability of such models. While there is emerging work on relieving this pressure via model compression, the applicability and performance of existing compression techniques is limited by the scale and complexity of GPT models. In this paper, we address this challenge, and propose GPTQ, a new one-shot weight quantization method based on approximate second-order information, that is both highly-accurate and highly-efficient. Specifically, GPTQ can quantize GPT models with 175 billion parameters in approximately four GPU hours, reducing the bitwidth down to 3 or 4 bits per weight, with negligible accuracy degradation relative to the uncompressed baseline. Our method more than doubles the compression gains relative to previously-proposed one-shot quantization methods, preserving accuracy, allowing us for the first time to execute an 175 billion-parameter model inside a single GPU for generative inference. Moreover, we also show that our method can still provide reasonable accuracy in the extreme quantization regime, in which weights are quantized to 2-bit or even ternary quantization levels. We show experimentally that these improvements can be leveraged for end-to-end inference speedups over FP16, of around 3.25x when using high-end GPUs (NVIDIA A100) and 4.5x when using more cost-effective ones (NVIDIA A6000). The implementation is available at https://github.com/IST-DASLab/gptq.\n[E2] While this leads to worse compression on average relative to the 2-bit numbers above, this pattern could be efficiently implemented on custom hardware such as FPGAs. In summary, these results are an encouraging first step towards pushing highly-accurate one-shot compression of very large language models, even lower than 3 bits per value on average. 6 Summary and Limitations We have presented GPTQ, an approximate second-order method for quantizing truly large language models.\n[E3] We thank the Swiss National Supercomputing Center (CSCS) for supporting us with compute infrastructure. 7 Ethics Statement Our work introduces a general method for compressing large language models (LLMs) via quantization, with little-to-no accuracy loss in terms of standard accuracy metrics such as perplexity. Our method is task-agnostic, as it only uses a tiny amount of randomly-chosen data for calibration.\n[E4] Our primary baseline, denoted by RTN, consists of rounding all weights to the nearest quantized value on exactly the same asymmetric per-row grid that is also used for GPTQ, meaning that it corresponds precisely to the state-of-the-art weight quantization of LLM.int8(). This is currently the method of choice in all works on quantization of very large language models (Dettmers et al., 2022; Yao et al., 2022; Park et al., 2022): its runtime scales well to networks with many billions of parameters, as it simply performs direct rounding. As we will also discuss further, more accurate methods, such as AdaRound (Nagel et al., 2020) or BRECQ (Li et al., 2021), are currently too slow for models with many billions of parameters, the main focus of this work.\n[E5] Formally, this can be restated as (1) Further, similar to (Nagel et al., 2020; Li et al., 2021; Frantar et al., 2022), we assume that the quantization grid for is fixed before the process, and that individual weights can move freely as in (Hubara et al., 2021; Frantar et al., 2022). Our approach builds on the recently-proposed Optimal Brain Quanization (OBQ) method (Frantar et al., 2022) for solving the layer-wise quantization problem defined above, to which we perform a series of major modifications, which allow it to scale to large language models, providing more than three orders of magnitude computational speedup. To aid understanding, we first briefly summarize the original OBQ method.",
+     "reply": "{\"verdict\": \"SUPPORTED\", \"excerpt\": \"Specifically, GPTQ can quantize GPT models with 175 billion parameters in approximately four GPU hours, reducing the bitwidth down to 3 or 4 bits per weight, with negligible accuracy degradation relative to the uncompressed baseline.\", \"reason\": \"The excerpt directly states GPTQ quantizes weights of very large GPT models to 3 or 4 bits per weight.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "kurtic_overbroad",
+   "repeat": 0,
+   "expect": "NOT_SUPPORTED",
+   "origin": "real",
+   "sentence": "Kurti\u0107 et al. report over 500,000 evaluations of quantized Llama-3.1 models, finding recovery above 99% for every scheme tested.",
+   "verdict": "CONTRADICTED",
+   "quote": "the quantized models recover close to 99% of the baseline\u2019s average score on average, with all models maintaining at least 96% recovery",
+   "excerpt": "E1",
+   "reason": "The paper reports average recovery near 99% with a minimum of 96%, not above 99% for every scheme tested.",
+   "note": "",
+   "windows": [
+    [
+     "E1",
+     "The benchmarks in v2 include more complex topics, such as: Expert knowledge and reasoning: MMLU-Pro, GPQA, Big Bench Hard Multistep reasoning: MuSR Advanced math problems: MATH Level 5 Instruction following: IFEval. As illustrated in Figure 2 (right) above, the quantized models recover close to 99% of the baseline\u2019s average score on average, with all models maintaining at least 96% recovery. However, the increased difficulty of these tasks, especially for smaller models, resulted in higher variance for benchmarks like GPQA and MuSR, where scores approached the random guessing threshold even for the full-precision baseline."
+    ],
+    [
+     "E2",
+     "With its streamlined and efficient base architecture, Llama 3.1 is an ideal candidate for assessing various quantization schemes. For each Llama 3.1 size (8B, 70B, and 405B), we tested three distinct quantization schemes alongside the baseline 16-bit model. These schemes were selected to accommodate different hardware and deployment requirements, and all performance claims were validated using vLLM (0.6.2): W8A8-INT: This quantization scheme reduces weights and activations to 8-bit integer values, making it ideal for server or throughput-based deployments on Nvidia Ampere (A100 GPUs) and older hardware."
+    ],
+    [
+     "E3",
+     "Skip to main content Search We ran over half a million evaluations on quantized LLMs\u2014here's what we found October 17, 2024 Eldar Kurti\u0107 Alexandre Marques Mark Kurtz Dan Alistarh Related topics: Artificial intelligence Related products: Red Hat AI Quantizing models to lower precision formats, such as 8-bit or 4-bit, significantly reduces computational costs and accelerates inference. However, there has been a persistent question of whether these quantized models retain the same level of accuracy and quality. Recently, the machine learning (ML) community has raised significant concerns about whether quantized large language models (LLMs) can truly compete with their uncompressed counterparts in accuracy and the general quality of generated responses."
+    ],
+    [
+     "E4",
+     "Efficiency and scalability: Quantization provides significant computational savings and faster inference speeds while maintaining the semantic quality and reliability of responses. These findings confirm that quantization offers large benefits in terms of cost, energy, and performance without sacrificing the integrity of the models. As LLMs grow in size and complexity, quantization will play a pivotal role in enabling organizations to deploy state-of-the-art models efficiently."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: We ran over half a million evaluations on quantized LLMs\u2014here's what we found | Red Hat Developer ()\nSENTENCE: Kurti\u0107 et al. report over 500,000 evaluations of quantized Llama-3.1 models, finding recovery above 99% for every scheme tested. [the cited paper]\nEXCERPTS:\n[E1] The benchmarks in v2 include more complex topics, such as: Expert knowledge and reasoning: MMLU-Pro, GPQA, Big Bench Hard Multistep reasoning: MuSR Advanced math problems: MATH Level 5 Instruction following: IFEval. As illustrated in Figure 2 (right) above, the quantized models recover close to 99% of the baseline\u2019s average score on average, with all models maintaining at least 96% recovery. However, the increased difficulty of these tasks, especially for smaller models, resulted in higher variance for benchmarks like GPQA and MuSR, where scores approached the random guessing threshold even for the full-precision baseline.\n[E2] With its streamlined and efficient base architecture, Llama 3.1 is an ideal candidate for assessing various quantization schemes. For each Llama 3.1 size (8B, 70B, and 405B), we tested three distinct quantization schemes alongside the baseline 16-bit model. These schemes were selected to accommodate different hardware and deployment requirements, and all performance claims were validated using vLLM (0.6.2): W8A8-INT: This quantization scheme reduces weights and activations to 8-bit integer values, making it ideal for server or throughput-based deployments on Nvidia Ampere (A100 GPUs) and older hardware.\n[E3] Skip to main content Search We ran over half a million evaluations on quantized LLMs\u2014here's what we found October 17, 2024 Eldar Kurti\u0107 Alexandre Marques Mark Kurtz Dan Alistarh Related topics: Artificial intelligence Related products: Red Hat AI Quantizing models to lower precision formats, such as 8-bit or 4-bit, significantly reduces computational costs and accelerates inference. However, there has been a persistent question of whether these quantized models retain the same level of accuracy and quality. Recently, the machine learning (ML) community has raised significant concerns about whether quantized large language models (LLMs) can truly compete with their uncompressed counterparts in accuracy and the general quality of generated responses.\n[E4] Efficiency and scalability: Quantization provides significant computational savings and faster inference speeds while maintaining the semantic quality and reliability of responses. These findings confirm that quantization offers large benefits in terms of cost, energy, and performance without sacrificing the integrity of the models. As LLMs grow in size and complexity, quantization will play a pivotal role in enabling organizations to deploy state-of-the-art models efficiently.",
+     "reply": "{\"verdict\": \"CONTRADICTED\", \"excerpt\": \"E1\", \"quote\": \"the quantized models recover close to 99% of the baseline\\u2019s average score on average, with all models maintaining at least 96% recovery\", \"reason\": \"The paper reports average recovery near 99% with a minimum of 96%, not above 99% for every scheme tested.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "gupta_formalised",
+   "repeat": 0,
+   "expect": "NOT_SUPPORTED",
+   "origin": "real",
+   "sentence": "Survivorship bias has been formalised in the MS MARCO benchmark by Gupta and MacAvaney.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "",
+   "reason": "",
+   "note": "the model's answer could not be read",
+   "windows": [
+    [
+     "E1",
+     "Survivorship bias is the tendency to concentrate on the positive outcomes of a selection process and overlook the results that generate negative outcomes. We observe that this bias could be present in the popular MS MARCO dataset, given that annotators could not find answers to 38--45% of the queries, leading to these queries being discarded in training and evaluation processes. Although we find that some discarded queries in MS MARCO are ill-defined or otherwise unanswerable, many are valid questions that could be answered had the collection been annotated more completely (around two thirds using modern ranking techniques). This survivability problem distorts the MS MARCO collection in several ways. We find that it affects the natural distribution of queries in terms of the type of information needed. When used for evaluation, we find that the bias likely yields a significant distortion of the absolute performance scores observed. Finally, given that MS MARCO is frequently used for model training, we train models based on subsets of MS MARCO that simulates more survivorship bias. We find that models trained in this setting are up to 9.9% worse when evaluated on versions of the dataset with more complete annotations, and up to 3.5% worse at zero-shot transfer. Our findings are complementary to other recent suggestions for further annotation of MS MARCO, but with a focus on discarded queries. Code and data for reproducing the results of this paper are available in an online appendix."
+    ],
+    [
+     "E2",
+     "On Survivorship Bias in MS MARCO Conference: Proceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval; July 11\u201315, 2022; Madrid, SpainProceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR \u201922), July 11\u201315, 2022, Madrid, SpainPrice: 15.00DOI: 10.1145/3477495.3531832ISBN: 978-1-4503-8732-3/22/07CCS: Information systems Information retrievalCCS: Information systems Evaluation of retrieval results Prashansa Gupta Affiliation: University of Glasgow, Glasgow, United Kingdom email: 2539575G@student.gla.ac.uk and Sean MacAvaney Affiliation: University of Glasgow, Glasgow, United Kingdom email: sean.macavaney@glasgow.ac.uk \u00a9 acmcopyright Abstract. Survivorship bias is the tendency to concentrate on the positive outcomes of a selection process and overlook the results that generate negative outcomes."
+    ],
+    [
+     "E3",
+     "Survivorship Bias in Training Given our observation that survivability has a noticeable effect on the evaluation of systems that use MS MARCO, it is natural to ask whether systems trained on it are also affected by its survivability bias. This is of particular concern given that it has become commonplace to perform either zero-shot transfer from MS MARCO to other datasets (e.g., (Pradeep et al., 2021; Thakur et al., 2021; MacAvaney et al., 2020a)) or as an initial stage of training before fine-tuning on a target dataset (Li et al., 2020). In this section, we describe our experiments training a leading neural re-ranking model on a simulated set of training data that simulate a stricter annotation setup that would have resulted in more discarded queries."
+    ],
+    [
+     "E4",
+     "We further note the potential for discarded queries may be useful in pseudo-labeling settings (Lin et al., 2021), especially considering that we found existing ranking models can often effectively find answers to these queries. We thank Craig Macdonald, Iadh Ounis, Jeff Dalton, Andrew Yates, and anonymous reviewers for helpful feedback on this manuscript. Sean MacAvaney acknowledges EPSRC grant EP/R018634/1: Closed-Loop Data Science for Complex, Computationally- & Data-Intensive Analytics."
+    ],
+    [
+     "E5",
+     "Therefore, we limit our study to the survivorship bias in terms of queries. We use ir-datasets (MacAvaney et al., 2021) to access data for our analysis. This package provides access to both the MS MARCO passage ranking dataset33 3 Dataset ID: msmarco-passage and the MS MARCO QnA44 4 Dataset ID: msmarco-qna."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: On Survivorship Bias in MS MARCO (Gupta, Macavaney, 2022)\nSENTENCE: Survivorship bias has been formalised in the MS MARCO benchmark by Gupta and MacAvaney. [the cited paper]\nEXCERPTS:\n[E1] Survivorship bias is the tendency to concentrate on the positive outcomes of a selection process and overlook the results that generate negative outcomes. We observe that this bias could be present in the popular MS MARCO dataset, given that annotators could not find answers to 38--45% of the queries, leading to these queries being discarded in training and evaluation processes. Although we find that some discarded queries in MS MARCO are ill-defined or otherwise unanswerable, many are valid questions that could be answered had the collection been annotated more completely (around two thirds using modern ranking techniques). This survivability problem distorts the MS MARCO collection in several ways. We find that it affects the natural distribution of queries in terms of the type of information needed. When used for evaluation, we find that the bias likely yields a significant distortion of the absolute performance scores observed. Finally, given that MS MARCO is frequently used for model training, we train models based on subsets of MS MARCO that simulates more survivorship bias. We find that models trained in this setting are up to 9.9% worse when evaluated on versions of the dataset with more complete annotations, and up to 3.5% worse at zero-shot transfer. Our findings are complementary to other recent suggestions for further annotation of MS MARCO, but with a focus on discarded queries. Code and data for reproducing the results of this paper are available in an online appendix.\n[E2] On Survivorship Bias in MS MARCO Conference: Proceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval; July 11\u201315, 2022; Madrid, SpainProceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR \u201922), July 11\u201315, 2022, Madrid, SpainPrice: 15.00DOI: 10.1145/3477495.3531832ISBN: 978-1-4503-8732-3/22/07CCS: Information systems Information retrievalCCS: Information systems Evaluation of retrieval results Prashansa Gupta Affiliation: University of Glasgow, Glasgow, United Kingdom email: 2539575G@student.gla.ac.uk and Sean MacAvaney Affiliation: University of Glasgow, Glasgow, United Kingdom email: sean.macavaney@glasgow.ac.uk \u00a9 acmcopyright Abstract. Survivorship bias is the tendency to concentrate on the positive outcomes of a selection process and overlook the results that generate negative outcomes.\n[E3] Survivorship Bias in Training Given our observation that survivability has a noticeable effect on the evaluation of systems that use MS MARCO, it is natural to ask whether systems trained on it are also affected by its survivability bias. This is of particular concern given that it has become commonplace to perform either zero-shot transfer from MS MARCO to other datasets (e.g., (Pradeep et al., 2021; Thakur et al., 2021; MacAvaney et al., 2020a)) or as an initial stage of training before fine-tuning on a target dataset (Li et al., 2020). In this section, we describe our experiments training a leading neural re-ranking model on a simulated set of training data that simulate a stricter annotation setup that would have resulted in more discarded queries.\n[E4] We further note the potential for discarded queries may be useful in pseudo-labeling settings (Lin et al., 2021), especially considering that we found existing ranking models can often effectively find answers to these queries. We thank Craig Macdonald, Iadh Ounis, Jeff Dalton, Andrew Yates, and anonymous reviewers for helpful feedback on this manuscript. Sean MacAvaney acknowledges EPSRC grant EP/R018634/1: Closed-Loop Data Science for Complex, Computationally- & Data-Intensive Analytics.\n[E5] Therefore, we limit our study to the survivorship bias in terms of queries. We use ir-datasets (MacAvaney et al., 2021) to access data for our analysis. This package provides access to both the MS MARCO passage ranking dataset33 3 Dataset ID: msmarco-passage and the MS MARCO QnA44 4 Dataset ID: msmarco-qna.",
+     "reply": "{\"verdict\": \"SUPPORTED\", \"excerpt\": \"E1\", \"quote\": \"We observe that this bias could be present in the popular MS MARCO dataset, given that annotators could not find answers to 38--45% of the queries, leading to these queries being discarded in training and evaluation processes.\", \"reason\": \"The excerpt shows the cited paper explicitly identifies and analyzes survivorship bias within the MS MARCO dataset, matching the sentence"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "vovk_mondrian",
+   "repeat": 0,
+   "expect": "NOT_SUPPORTED",
+   "origin": "reconstructed",
+   "sentence": "Vovk introduced Mondrian conformal predictors in his paper on the conditional validity of inductive conformal predictors.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "",
+   "reason": "The excerpts describe a conditional version of inductive conformal predictors and label conditional validity but never mention the term 'Mondrian conformal predictors', so the sentence's claim cannot be confirmed.",
+   "note": "",
+   "windows": [
+    [
+     "E1",
+     "Conformal predictors are set predictors that are automatically valid in the sense of having coverage probability equal to or exceeding a given confidence level. Inductive conformal predictors are a computationally efficient version of conformal predictors satisfying the same property of validity. However, inductive conformal predictors have been only known to control unconditional coverage probability. This paper explores various versions of conditional validity and various ways to achieve them using inductive conformal predictors and their modifications."
+    ],
+    [
+     "E2",
+     "This paper explores various versions of conditional validity and various ways to achieve them using inductive conformal predictors and their modifications. 1 Introduction This paper continues study of the method of conformal prediction, introduced in Vovk et al. (1999) and Saunders et al."
+    ],
+    [
+     "E3",
+     "We give self-contained proofs of Propositions 2a and 2b, but Appendix A explains how they can be deduced from classical results about tolerance regions. In the following section, Section 4, we introduce a conditional version of inductive conformal predictors and explain, in particular, how it achieves label conditional validity. Label conditional validity is important as it allows the learner to control the set-prediction analogues of false positive and false negative rates."
+    ],
+    [
+     "E4",
+     "Conditional validity of inductive conformal predictors Vladimir Vovk Email: v.vovk@rhul.ac.uk Affiliation: http://vovk.net Abstract Conformal predictors are set predictors that are automatically valid in the sense of having coverage probability equal to or exceeding a given confidence level. Inductive conformal predictors are a computationally efficient version of conformal predictors satisfying the same property of validity. However, inductive conformal predictors have been only known to control unconditional coverage probability."
+    ],
+    [
+     "E5",
+     "Many thanks to the reviewers of the conference version of the paper for their advice. Appendix A Training conditional validity for classical tolerance regions In this appendix we compare Propositions 2a and 2b with the results (see, e.g., Fraser 1957 and Guttman 1970) about classical tolerance regions (which are a special case of conformal predictors, as explained in Vovk et al. It is well known that under appropriate continuity assumptions the classical tolerance regions that discard out of the statistically equivalent blocks (in this appendix we always assume that is an integer number) have coverage probability following the beta distribution with parameters and (see, e.g., Tukey 1947 or Guttman 1970, Theorems 2.2 and 2.3); in particular, their expected coverage probability is ."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: Conditional validity of inductive conformal predictors (Vovk, 2012)\nSENTENCE: Vovk introduced Mondrian conformal predictors in his paper on the conditional validity of inductive conformal predictors. [the cited paper]\nEXCERPTS:\n[E1] Conformal predictors are set predictors that are automatically valid in the sense of having coverage probability equal to or exceeding a given confidence level. Inductive conformal predictors are a computationally efficient version of conformal predictors satisfying the same property of validity. However, inductive conformal predictors have been only known to control unconditional coverage probability. This paper explores various versions of conditional validity and various ways to achieve them using inductive conformal predictors and their modifications.\n[E2] This paper explores various versions of conditional validity and various ways to achieve them using inductive conformal predictors and their modifications. 1 Introduction This paper continues study of the method of conformal prediction, introduced in Vovk et al. (1999) and Saunders et al.\n[E3] We give self-contained proofs of Propositions 2a and 2b, but Appendix A explains how they can be deduced from classical results about tolerance regions. In the following section, Section 4, we introduce a conditional version of inductive conformal predictors and explain, in particular, how it achieves label conditional validity. Label conditional validity is important as it allows the learner to control the set-prediction analogues of false positive and false negative rates.\n[E4] Conditional validity of inductive conformal predictors Vladimir Vovk Email: v.vovk@rhul.ac.uk Affiliation: http://vovk.net Abstract Conformal predictors are set predictors that are automatically valid in the sense of having coverage probability equal to or exceeding a given confidence level. Inductive conformal predictors are a computationally efficient version of conformal predictors satisfying the same property of validity. However, inductive conformal predictors have been only known to control unconditional coverage probability.\n[E5] Many thanks to the reviewers of the conference version of the paper for their advice. Appendix A Training conditional validity for classical tolerance regions In this appendix we compare Propositions 2a and 2b with the results (see, e.g., Fraser 1957 and Guttman 1970) about classical tolerance regions (which are a special case of conformal predictors, as explained in Vovk et al. It is well known that under appropriate continuity assumptions the classical tolerance regions that discard out of the statistically equivalent blocks (in this appendix we always assume that is an integer number) have coverage probability following the beta distribution with parameters and (see, e.g., Tukey 1947 or Guttman 1970, Theorems 2.2 and 2.3); in particular, their expected coverage probability is .",
+     "reply": "{\"verdict\": \"UNCLEAR\", \"excerpt\": \"\", \"quote\": \"\", \"reason\": \"The excerpts describe a conditional version of inductive conformal predictors and label conditional validity but never mention the term 'Mondrian conformal predictors', so the sentence's claim cannot be confirmed.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "bp_wrong_count",
+   "repeat": 0,
+   "expect": "NOT_SUPPORTED",
+   "origin": "injected",
+   "sentence": "Their score matrix covers 84 frontier models and 233 benchmarks and is approximately rank-2.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2",
+   "reason": "The paper reports 133 benchmarks, not 233 as stated in the sentence.",
+   "note": "the model said CONTRADICTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model's scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share. Building on this, we design BenchPress: a logit-space rank-2 matrix completion method that recovers held-out scores to within 4.6 points. Using BenchPress, we find a subset of five benchmarks {GPQA-D, HLE, Codeforces, MMLU-Pro, ARC-AGI-1} that can recover the rest of a model's public scorecard to within 3.93 points. For a tighter evaluation budget, a cheaper set {GPQA-D, MMLU-Pro, Aider Polyglot, MATH-500, AIME 2026} can predict a model's evals to within 4.55. Finally, we identify what affects prediction reliability and combine these factors with predictor disagreement to quantify when predictions can be trusted. We release the score matrix, the code for reproducing all of our experiments on Github."
+    ],
+    [
+     "E2",
+     "But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model\u2019s scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share."
+    ],
+    [
+     "E3",
+     "Second, benchmark-level predictions are only as good as the benchmarks themselves: a noisy or poorly constructed benchmark is faithfully predicted as such; pushing score prediction beyond aggregated benchmark scores to instance-level outcomes would let BenchPress capture within-benchmark structure and improve predictions on the hardest tails. Third, our matrix already covers mainstream text and vision-language benchmarks, but more specialized ecosystems (audio and speech, robotics and embodied agents, scientific simulators) remain untested; whether the same low-rank treatment carries over to these settings is an open question."
+    ],
+    [
+     "E4",
+     "Research snapshot and practical use. We answer the paper\u2019s research questions using the fixed May 2026 snapshot, which after filtering contains 84 models and 133 benchmarks (Figure 2); the unfiltered audit pool covers 188 models across 316 benchmarks. All reported experiments remain tied to this snapshot for reproducibility."
+    ],
+    [
+     "E5",
+     "Table 17 shows that the adopted Logit Bias ALS predictor remains fully covered and ranks sixth by MedAPE and first by MedAE. The lowest-MedAPE configuration is only slightly more accurate but covers 79% of held-out cells, so the updated matrix strengthens the original choice of Logit Bias ALS as the full-coverage predictor. Table 17: Top-15 transform and method configurations on the August 26, 2026 score matrix after applying the paper\u2019s observation thresholds (, 4,905 observed cells)."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: You Don't Need to Run Every Eval (Zeng, Papailiopoulos, 2026)\nSENTENCE: Their score matrix covers 84 frontier models and 233 benchmarks and is approximately rank-2. [the cited paper]\nEXCERPTS:\n[E1] A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model's scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share. Building on this, we design BenchPress: a logit-space rank-2 matrix completion method that recovers held-out scores to within 4.6 points. Using BenchPress, we find a subset of five benchmarks {GPQA-D, HLE, Codeforces, MMLU-Pro, ARC-AGI-1} that can recover the rest of a model's public scorecard to within 3.93 points. For a tighter evaluation budget, a cheaper set {GPQA-D, MMLU-Pro, Aider Polyglot, MATH-500, AIME 2026} can predict a model's evals to within 4.55. Finally, we identify what affects prediction reliability and combine these factors with predictor disagreement to quantify when predictions can be trusted. We release the score matrix, the code for reproducing all of our experiments on Github.\n[E2] But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model\u2019s scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share.\n[E3] Second, benchmark-level predictions are only as good as the benchmarks themselves: a noisy or poorly constructed benchmark is faithfully predicted as such; pushing score prediction beyond aggregated benchmark scores to instance-level outcomes would let BenchPress capture within-benchmark structure and improve predictions on the hardest tails. Third, our matrix already covers mainstream text and vision-language benchmarks, but more specialized ecosystems (audio and speech, robotics and embodied agents, scientific simulators) remain untested; whether the same low-rank treatment carries over to these settings is an open question.\n[E4] Research snapshot and practical use. We answer the paper\u2019s research questions using the fixed May 2026 snapshot, which after filtering contains 84 models and 133 benchmarks (Figure 2); the unfiltered audit pool covers 188 models across 316 benchmarks. All reported experiments remain tied to this snapshot for reproducibility.\n[E5] Table 17 shows that the adopted Logit Bias ALS predictor remains fully covered and ranks sixth by MedAPE and first by MedAE. The lowest-MedAPE configuration is only slightly more accurate but covers 79% of held-out cells, so the updated matrix strengthens the original choice of Logit Bias ALS as the full-coverage predictor. Table 17: Top-15 transform and method configurations on the August 26, 2026 score matrix after applying the paper\u2019s observation thresholds (, 4,905 observed cells).",
+     "reply": "{\"verdict\": \"CONTRADICTED\", \"excerpt\": \"We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2\", \"reason\": \"The paper reports 133 benchmarks, not 233 as stated in the sentence.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "bp_never_conformal",
+   "repeat": 0,
+   "expect": "NOT_SUPPORTED",
+   "origin": "injected",
+   "sentence": "BenchPress never mentions conformal prediction.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "form leave-one-benchmark-out conformal 80% intervals",
+   "reason": "The paper explicitly discusses conformal prediction intervals, contradicting the claim that it never mentions conformal prediction.",
+   "note": "the model said CONTRADICTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model's scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share. Building on this, we design BenchPress: a logit-space rank-2 matrix completion method that recovers held-out scores to within 4.6 points. Using BenchPress, we find a subset of five benchmarks {GPQA-D, HLE, Codeforces, MMLU-Pro, ARC-AGI-1} that can recover the rest of a model's public scorecard to within 3.93 points. For a tighter evaluation budget, a cheaper set {GPQA-D, MMLU-Pro, Aider Polyglot, MATH-500, AIME 2026} can predict a model's evals to within 4.55. Finally, we identify what affects prediction reliability and combine these factors with predictor disagreement to quantify when predictions can be trusted. We release the score matrix, the code for reproducing all of our experiments on Github."
+    ],
+    [
+     "E2",
+     "We keep the 23 benchmarks with at least 30 observed model scores, hold out the same 10 scores per benchmark for evaluation, and reveal of the remaining scores in that column as conditioning evidence while hiding the rest of the column and keeping all other columns observed. We predict the 10 held-out cells with the fixed Logit Bias ALS predictor and form leave-one-benchmark-out conformal 80% intervals at each . Table 24 shows that empirical coverage stays near the 80% target while the median interval width falls from 32.3 to 23.0 score points and the median absolute error drops from 5.8 to 4.7 as more scores are revealed."
+    ],
+    [
+     "E3",
+     "The display calibration bins held-out cells by hybrid risk, estimates the empirical within-tolerance probability in each bin, enforces a monotone nonincreasing map from risk to trust probability, and interpolates this map for displayed cells. For prediction intervals, we apply the same leave-fold-out conformal wrapper to each reliability estimator: on all folds except the evaluated fold, take the 90th percentile of , multiply the evaluated fold\u2019s risk score by that scale, and center the resulting 90% interval at the fixed Logit Bias ALS point prediction . Table 23 reports the resulting interval widths at three coverage levels."
+    ],
+    [
+     "E4",
+     "We compare the reliability estimators by asking which one best identifies safe-to-use predictions before the benchmark is run. The same risk score can also be calibrated into a trust probability and a conformal prediction interval; those details and interval-width results are reported in Section E.2. Throughout this subsection we report MedAE only, since the risk-coverage curve is measured on the absolute score-point scale."
+    ],
+    [
+     "E5",
+     "We combine these factors with disagreement among several score predictors to estimate the reliability of each BenchPress prediction. This produces a trust probability and a conformally calibrated 90% prediction interval (Section 6). Figure 1 previews BenchPress on four individual model\u2013benchmark examples and across all models in the score matrix."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: You Don't Need to Run Every Eval (Zeng, Papailiopoulos, 2026)\nSENTENCE: BenchPress never mentions conformal prediction. [the cited paper]\nEXCERPTS:\n[E1] A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model's scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share. Building on this, we design BenchPress: a logit-space rank-2 matrix completion method that recovers held-out scores to within 4.6 points. Using BenchPress, we find a subset of five benchmarks {GPQA-D, HLE, Codeforces, MMLU-Pro, ARC-AGI-1} that can recover the rest of a model's public scorecard to within 3.93 points. For a tighter evaluation budget, a cheaper set {GPQA-D, MMLU-Pro, Aider Polyglot, MATH-500, AIME 2026} can predict a model's evals to within 4.55. Finally, we identify what affects prediction reliability and combine these factors with predictor disagreement to quantify when predictions can be trusted. We release the score matrix, the code for reproducing all of our experiments on Github.\n[E2] We keep the 23 benchmarks with at least 30 observed model scores, hold out the same 10 scores per benchmark for evaluation, and reveal of the remaining scores in that column as conditioning evidence while hiding the rest of the column and keeping all other columns observed. We predict the 10 held-out cells with the fixed Logit Bias ALS predictor and form leave-one-benchmark-out conformal 80% intervals at each . Table 24 shows that empirical coverage stays near the 80% target while the median interval width falls from 32.3 to 23.0 score points and the median absolute error drops from 5.8 to 4.7 as more scores are revealed.\n[E3] The display calibration bins held-out cells by hybrid risk, estimates the empirical within-tolerance probability in each bin, enforces a monotone nonincreasing map from risk to trust probability, and interpolates this map for displayed cells. For prediction intervals, we apply the same leave-fold-out conformal wrapper to each reliability estimator: on all folds except the evaluated fold, take the 90th percentile of , multiply the evaluated fold\u2019s risk score by that scale, and center the resulting 90% interval at the fixed Logit Bias ALS point prediction . Table 23 reports the resulting interval widths at three coverage levels.\n[E4] We compare the reliability estimators by asking which one best identifies safe-to-use predictions before the benchmark is run. The same risk score can also be calibrated into a trust probability and a conformal prediction interval; those details and interval-width results are reported in Section E.2. Throughout this subsection we report MedAE only, since the risk-coverage curve is measured on the absolute score-point scale.\n[E5] We combine these factors with disagreement among several score predictors to estimate the reliability of each BenchPress prediction. This produces a trust probability and a conformally calibrated 90% prediction interval (Section 6). Figure 1 previews BenchPress on four individual model\u2013benchmark examples and across all models in the score matrix.",
+     "reply": "{\"verdict\": \"CONTRADICTED\", \"excerpt\": \"form leave-one-benchmark-out conformal 80% intervals\", \"reason\": \"The paper explicitly discusses conformal prediction intervals, contradicting the claim that it never mentions conformal prediction.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "bp_quantized_absence",
+   "repeat": 0,
+   "expect": "NOT_SUPPORTED",
+   "origin": "real",
+   "sentence": "Quantized checkpoints do not appear in the BenchPress paper.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "",
+   "reason": "No excerpt discusses quantized checkpoints, so we cannot confirm this absence claim from the provided text.",
+   "note": "",
+   "windows": [
+    [
+     "E1",
+     "A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model's scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share. Building on this, we design BenchPress: a logit-space rank-2 matrix completion method that recovers held-out scores to within 4.6 points. Using BenchPress, we find a subset of five benchmarks {GPQA-D, HLE, Codeforces, MMLU-Pro, ARC-AGI-1} that can recover the rest of a model's public scorecard to within 3.93 points. For a tighter evaluation budget, a cheaper set {GPQA-D, MMLU-Pro, Aider Polyglot, MATH-500, AIME 2026} can predict a model's evals to within 4.55. Finally, we identify what affects prediction reliability and combine these factors with predictor disagreement to quantify when predictions can be trusted. We release the score matrix, the code for reproducing all of our experiments on Github."
+    ],
+    [
+     "E2",
+     "But the scores reported at release are only a small fraction of the evaluations run during model development. During model development, researchers repeatedly run the same benchmarks to compare checkpoints and model variants trained under different settings. After release, users run additional evaluations to compare models for their own applications."
+    ],
+    [
+     "E3",
+     "See Section A.1 for the detailed experiment setting. A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval?"
+    ],
+    [
+     "E4",
+     "MedAPE (%) MedAE # Transform Method Hyperparameter Value # Transform Method Hyperparameter Value 1 Probit BenchReg , 7.6 (79%) 1 Logit Bias ALS , 4.43 (100%) 2 Logit BenchReg , 7.6 (79%) 2 Probit Bias ALS , 4.47 (100%) 3 Probit BenchReg , 7.7 (80%) 3 Logit BenchReg , 4.49 (79%) 4 Logit BenchReg , 7.7 (80%) 4 Logit Bias ALS , 4.51 (100%) 5 Probit BenchReg , 7.7 (81%) 5 Logit BenchReg , 4.54 (80%) 6 Logit Bias ALS , 7.7 (100%) 6 Probit BenchReg , 4.55 (79%) 7 Probit Bias ALS , 7.7 (100%) 7 Logit BenchReg , 4.56 (80%) 8 Logit BenchReg , 7.8 (72%) 8 Probit BenchReg , 4.56 (80%) 9 Quantile Bias ALS , 7.8 (100%) 9 Probit BenchReg , 4.56 (81%) 10 Logit BenchReg"
+    ],
+    [
+     "E5",
+     "1 Logit ModelReg , 7.75 4.69 72% 2 Logit Bias ALS , 7.77 4.63 100% 3 Probit Bias ALS , 7.80 4.64 100% 4 Probit ModelReg , 7.81 4.71 69% 5 Identity ModelReg , 7.83 5.03 71% 6 Probit BenchReg , 7.84 4.73 77% 7 Logit BenchReg , 7.95 4.69 79% 8 Quantile Bias ALS , 8.00 4.73 100% 9 Identity BenchReg , 8.10 4.96 78% 10 Quantile ModelReg , 8.17 4.90 70% 11 Arcsinh BenchReg , 8.23 5.06 79% 12 Identity Bias ALS , 8.25 5.17 100% 13 Square root ModelReg , 8.27 5.17 68% 14 Square root BenchReg , 8.29 4.99 80% 15 Quantile BenchReg , 8.35 4.88 82% 16 Log BenchReg , 8.37 5.08 79% 17 Quantile Soft-Impute 8.42 5.04 100% 18 Arcsinh ModelReg , 8.46 5.29"
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: You Don't Need to Run Every Eval (Zeng, Papailiopoulos, 2026)\nSENTENCE: Quantized checkpoints do not appear in the BenchPress paper. [the cited paper]\nEXCERPTS:\n[E1] A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval? We compile a public score matrix of 84 frontier models on 133 benchmarks (2,604 cells, 23.3% filled) and find it is approximately rank-2: a model's scores across all benchmarks are largely determined by just two numbers. We confirm this in two ways: (i) scores hidden from the matrix are best recovered using two factors, and (ii) two factors already explain over 90% of the variation among models on the benchmarks they share. Building on this, we design BenchPress: a logit-space rank-2 matrix completion method that recovers held-out scores to within 4.6 points. Using BenchPress, we find a subset of five benchmarks {GPQA-D, HLE, Codeforces, MMLU-Pro, ARC-AGI-1} that can recover the rest of a model's public scorecard to within 3.93 points. For a tighter evaluation budget, a cheaper set {GPQA-D, MMLU-Pro, Aider Polyglot, MATH-500, AIME 2026} can predict a model's evals to within 4.55. Finally, we identify what affects prediction reliability and combine these factors with predictor disagreement to quantify when predictions can be trusted. We release the score matrix, the code for reproducing all of our experiments on Github.\n[E2] But the scores reported at release are only a small fraction of the evaluations run during model development. During model development, researchers repeatedly run the same benchmarks to compare checkpoints and model variants trained under different settings. After release, users run additional evaluations to compare models for their own applications.\n[E3] See Section A.1 for the detailed experiment setting. A modern model release reports scores on 40+ benchmarks and the same evaluations were run many more times before it: to track training progress, compare design choices, and select the checkpoint for the release. But do we need to run every eval?\n[E4] MedAPE (%) MedAE # Transform Method Hyperparameter Value # Transform Method Hyperparameter Value 1 Probit BenchReg , 7.6 (79%) 1 Logit Bias ALS , 4.43 (100%) 2 Logit BenchReg , 7.6 (79%) 2 Probit Bias ALS , 4.47 (100%) 3 Probit BenchReg , 7.7 (80%) 3 Logit BenchReg , 4.49 (79%) 4 Logit BenchReg , 7.7 (80%) 4 Logit Bias ALS , 4.51 (100%) 5 Probit BenchReg , 7.7 (81%) 5 Logit BenchReg , 4.54 (80%) 6 Logit Bias ALS , 7.7 (100%) 6 Probit BenchReg , 4.55 (79%) 7 Probit Bias ALS , 7.7 (100%) 7 Logit BenchReg , 4.56 (80%) 8 Logit BenchReg , 7.8 (72%) 8 Probit BenchReg , 4.56 (80%) 9 Quantile Bias ALS , 7.8 (100%) 9 Probit BenchReg , 4.56 (81%) 10 Logit BenchReg\n[E5] 1 Logit ModelReg , 7.75 4.69 72% 2 Logit Bias ALS , 7.77 4.63 100% 3 Probit Bias ALS , 7.80 4.64 100% 4 Probit ModelReg , 7.81 4.71 69% 5 Identity ModelReg , 7.83 5.03 71% 6 Probit BenchReg , 7.84 4.73 77% 7 Logit BenchReg , 7.95 4.69 79% 8 Quantile Bias ALS , 8.00 4.73 100% 9 Identity BenchReg , 8.10 4.96 78% 10 Quantile ModelReg , 8.17 4.90 70% 11 Arcsinh BenchReg , 8.23 5.06 79% 12 Identity Bias ALS , 8.25 5.17 100% 13 Square root ModelReg , 8.27 5.17 68% 14 Square root BenchReg , 8.29 4.99 80% 15 Quantile BenchReg , 8.35 4.88 82% 16 Log BenchReg , 8.37 5.08 79% 17 Quantile Soft-Impute 8.42 5.04 100% 18 Arcsinh ModelReg , 8.46 5.29",
+     "reply": "{\"verdict\": \"UNCLEAR\", \"excerpt\": \"\", \"reason\": \"No excerpt discusses quantized checkpoints, so we cannot confirm this absence claim from the provided text.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "tong_inverted",
+   "repeat": 0,
+   "expect": "NOT_SUPPORTED",
+   "origin": "injected",
+   "sentence": "Tong et al. show that compression preserves the link between accuracy and uncertainty in every setting they test.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "compression frequently decouples accuracy from uncertainty",
+   "reason": "The paper explicitly finds that compression frequently decouples accuracy from uncertainty, the opposite of the sentence's claim that compression preserves this link in every setting.",
+   "note": "the model said CONTRADICTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "Model compression techniques such as quantization and pruning are widely used to reduce the deployment cost of large language models (LLMs), with existing evaluations focusing almost exclusively on accuracy preservation. However, in safety-critical applications, a model's ability to reliably quantify its own uncertainty is equally important. We ask: does compression preserve this ability? To answer this question, we benchmark 12 LLMs under various compression configurations across five NLP tasks, using conformal prediction to provide a rigorous, distribution-free measure of uncertainty. Our experiments reveal that: (I) compression frequently decouples accuracy from uncertainty; (II) larger models absorb compression-induced uncertainty far more effectively than smaller ones; and (III) uncertainty inflation is often threshold-like rather than gradual. These results suggest that accuracy-only evaluation is insufficient for assessing the deployment readiness of compressed LLMs, and that uncertainty-aware benchmarking should be a standard component of model compression pipelines."
+    ],
+    [
+     "E2",
+     "Does Compression Preserve Uncertainty? A Unified Benchmark for Quantized and Sparse LLMs via Conformal Prediction Yujia Tong \u2020\u2020thanks: Equal contribution. Affiliation: Wuhan University of Technology Yuxi Wang11footnotemark: 1 Affiliation: Wuhan University of Technology Yunyang Wan Affiliation: Wuhan University of Technology Tian Zhang Affiliation: Wuhan University of Technology Junhao Dong \u2020\u2020thanks: Corresponding author."
+    ],
+    [
+     "E3",
+     "Structured pruning at 20% also varies across methods and architectures: LLM-Pruner remains relatively effective on larger models such as Llama3.1-70B, whereas SliceGPT is unstable on Qwen3-8B, where the degenerate result marked by indicates unreliable uncertainty. Taken together, Table 1 shows that compression quality cannot be judged by accuracy alone: W4A16 is generally the safest setting for uncertainty preservation, W4A4 causes the largest uncertainty inflation, and pruning requires careful method selection. 5.2 Accuracy\u2013Uncertainty Decoupling Key Finding 1: Compression tends to decouple accuracy from uncertainty."
+    ],
+    [
+     "E4",
+     "A.4 Per-Method Full Results Tables This section reports the complete per-task results for each compression method, model family, and model scale. For every task, we include Coverage Rate (CR), Prediction Accuracy (Acc), and Prediction Set Size (SS), allowing the aggregate trends discussed in the main text to be traced back to their task-level measurements. These tables also expose cases where accuracy and uncertainty move differently, such as settings with stable SS but large accuracy degradation, or near-baseline accuracy with noticeable SS inflation."
+    ],
+    [
+     "E5",
+     "Appendix A Appendix A.1 Prompting Strategies Following [21], we evaluate all models with prompt-based inference rather than task-specific finetuning. Since LLM outputs can be sensitive to prompt wording, we use three prompting strategies for every task: Base Prompt, Shared Instruction Prompt, and Task-specific Instruction Prompt. The Base Prompt directly concatenates the question and all answer options, ending with an answer prefix."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: Does Compression Preserve Uncertainty? A Unified Benchmark for Quantized and Sparse LLMs via Conformal Prediction (Tong, Wang, Wan, Zhang et al., 2026)\nSENTENCE: Tong et al. show that compression preserves the link between accuracy and uncertainty in every setting they test. [the cited paper]\nEXCERPTS:\n[E1] Model compression techniques such as quantization and pruning are widely used to reduce the deployment cost of large language models (LLMs), with existing evaluations focusing almost exclusively on accuracy preservation. However, in safety-critical applications, a model's ability to reliably quantify its own uncertainty is equally important. We ask: does compression preserve this ability? To answer this question, we benchmark 12 LLMs under various compression configurations across five NLP tasks, using conformal prediction to provide a rigorous, distribution-free measure of uncertainty. Our experiments reveal that: (I) compression frequently decouples accuracy from uncertainty; (II) larger models absorb compression-induced uncertainty far more effectively than smaller ones; and (III) uncertainty inflation is often threshold-like rather than gradual. These results suggest that accuracy-only evaluation is insufficient for assessing the deployment readiness of compressed LLMs, and that uncertainty-aware benchmarking should be a standard component of model compression pipelines.\n[E2] Does Compression Preserve Uncertainty? A Unified Benchmark for Quantized and Sparse LLMs via Conformal Prediction Yujia Tong \u2020\u2020thanks: Equal contribution. Affiliation: Wuhan University of Technology Yuxi Wang11footnotemark: 1 Affiliation: Wuhan University of Technology Yunyang Wan Affiliation: Wuhan University of Technology Tian Zhang Affiliation: Wuhan University of Technology Junhao Dong \u2020\u2020thanks: Corresponding author.\n[E3] Structured pruning at 20% also varies across methods and architectures: LLM-Pruner remains relatively effective on larger models such as Llama3.1-70B, whereas SliceGPT is unstable on Qwen3-8B, where the degenerate result marked by indicates unreliable uncertainty. Taken together, Table 1 shows that compression quality cannot be judged by accuracy alone: W4A16 is generally the safest setting for uncertainty preservation, W4A4 causes the largest uncertainty inflation, and pruning requires careful method selection. 5.2 Accuracy\u2013Uncertainty Decoupling Key Finding 1: Compression tends to decouple accuracy from uncertainty.\n[E4] A.4 Per-Method Full Results Tables This section reports the complete per-task results for each compression method, model family, and model scale. For every task, we include Coverage Rate (CR), Prediction Accuracy (Acc), and Prediction Set Size (SS), allowing the aggregate trends discussed in the main text to be traced back to their task-level measurements. These tables also expose cases where accuracy and uncertainty move differently, such as settings with stable SS but large accuracy degradation, or near-baseline accuracy with noticeable SS inflation.\n[E5] Appendix A Appendix A.1 Prompting Strategies Following [21], we evaluate all models with prompt-based inference rather than task-specific finetuning. Since LLM outputs can be sensitive to prompt wording, we use three prompting strategies for every task: Base Prompt, Shared Instruction Prompt, and Task-specific Instruction Prompt. The Base Prompt directly concatenates the question and all answer options, ending with an answer prefix.",
+     "reply": "{\"verdict\":\"CONTRADICTED\",\"excerpt\":\"compression frequently decouples accuracy from uncertainty\",\"reason\":\"The paper explicitly finds that compression frequently decouples accuracy from uncertainty, the opposite of the sentence's claim that compression preserves this link in every setting.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  },
+  {
+   "id": "jin_impossible",
+   "repeat": 0,
+   "expect": "NOT_SUPPORTED",
+   "origin": "injected",
+   "sentence": "Jin and Ren prove that selection-conditional coverage is impossible for any selection rule.",
+   "verdict": "UNCLEAR",
+   "quote": "",
+   "excerpt": "This paper presents a general framework for constructing a prediction set with finite-sample exact coverage, conditional on the unit being selected by a given procedure.",
+   "reason": "The cited paper proves selection-conditional coverage IS achievable via their JOMI framework, not that it is impossible for any selection rule.",
+   "note": "the model said CONTRADICTED but its quote was not found in the passages it was shown, so the answer was discarded",
+   "windows": [
+    [
+     "E1",
+     "Conformal prediction builds marginally valid prediction intervals that cover the unknown outcome of a randomly drawn test point with a prescribed probability. However, in practice, data-driven methods are often used to identify specific test unit(s) of interest, requiring uncertainty quantification tailored to these focal units. In such cases, marginally valid conformal prediction intervals may fail to provide valid coverage for the focal unit(s) due to selection bias. This paper presents a general framework for constructing a prediction set with finite-sample exact coverage, conditional on the unit being selected by a given procedure. The general form of our method accommodates arbitrary selection rules that are invariant to the permutation of the calibration units, and generalizes Mondrian Conformal Prediction to multiple test units and non-equivariant classifiers. We also work out computationally efficient implementation of our framework for a number of realistic selection rules, including top-K selection, optimization-based selection, selection based on conformal p-values, and selection based on properties of preliminary conformal prediction sets. The performance of our methods is demonstrated via applications in drug discovery and health risk prediction."
+    ],
+    [
+     "E2",
+     "Examples include selecting drugs with sufficiently high binding affinities, finding highly competent job candidates, and identifying patients who benefit from a treatment, etc. In these problems, predictions from machine learning models serve as proxies for the true outcomes of interest that are too expensive or impossible to evaluate, and the selection procedure leverages the power of predictions to select units with large outcomes while ensuring error control. Given test points and (potentially random) thresholds , the goal is to select those while controlling the number/fraction of false positives."
+    ],
+    [
+     "E3",
+     "1.2 Preview of contributions In Section 3, we introduce the general formulation of JOMI, including the construction of reference set and its use in deriving a selection-conditionally valid prediction set. We prove that under exchangeability, the prediction set produced by JOMI covers with probability at least conditional on a selection event. The selection event can be \u201ctest unit is selected\u201d, which leads to (2); it can also be more granular, such as \u201ctest unit is selected, and there are selected test units\u201d."
+    ],
+    [
+     "E4",
+     "D.5.2 Case 2: . As in case 1, we prove that by showing that and . We proceed to show that ."
+    ],
+    [
+     "E5",
+     "We then prove the two statements separately. To prove (11), it suffices to show that (33) The exchangeability of data in given implies that, given knowledge of the unordered realized data values in , the probability of any assignment of these values to the data points is equal. That is, for any permutation of , Next, given and , we define the following subset of : where is an unordered set ( with removed) and , i.e., the test data with replaced by ."
+    ]
+   ],
+   "calls": [
+    {
+     "system_is_challenge": false,
+     "user": "CITED PAPER: Confidence on the Focal: Conformal Prediction with Selection-Conditional Coverage (Jin, Ren, 2024)\nSENTENCE: Jin and Ren prove that selection-conditional coverage is impossible for any selection rule. [the cited paper]\nEXCERPTS:\n[E1] Conformal prediction builds marginally valid prediction intervals that cover the unknown outcome of a randomly drawn test point with a prescribed probability. However, in practice, data-driven methods are often used to identify specific test unit(s) of interest, requiring uncertainty quantification tailored to these focal units. In such cases, marginally valid conformal prediction intervals may fail to provide valid coverage for the focal unit(s) due to selection bias. This paper presents a general framework for constructing a prediction set with finite-sample exact coverage, conditional on the unit being selected by a given procedure. The general form of our method accommodates arbitrary selection rules that are invariant to the permutation of the calibration units, and generalizes Mondrian Conformal Prediction to multiple test units and non-equivariant classifiers. We also work out computationally efficient implementation of our framework for a number of realistic selection rules, including top-K selection, optimization-based selection, selection based on conformal p-values, and selection based on properties of preliminary conformal prediction sets. The performance of our methods is demonstrated via applications in drug discovery and health risk prediction.\n[E2] Examples include selecting drugs with sufficiently high binding affinities, finding highly competent job candidates, and identifying patients who benefit from a treatment, etc. In these problems, predictions from machine learning models serve as proxies for the true outcomes of interest that are too expensive or impossible to evaluate, and the selection procedure leverages the power of predictions to select units with large outcomes while ensuring error control. Given test points and (potentially random) thresholds , the goal is to select those while controlling the number/fraction of false positives.\n[E3] 1.2 Preview of contributions In Section 3, we introduce the general formulation of JOMI, including the construction of reference set and its use in deriving a selection-conditionally valid prediction set. We prove that under exchangeability, the prediction set produced by JOMI covers with probability at least conditional on a selection event. The selection event can be \u201ctest unit is selected\u201d, which leads to (2); it can also be more granular, such as \u201ctest unit is selected, and there are selected test units\u201d.\n[E4] D.5.2 Case 2: . As in case 1, we prove that by showing that and . We proceed to show that .\n[E5] We then prove the two statements separately. To prove (11), it suffices to show that (33) The exchangeability of data in given implies that, given knowledge of the unordered realized data values in , the probability of any assignment of these values to the data points is equal. That is, for any permutation of , Next, given and , we define the following subset of : where is an unordered set ( with removed) and , i.e., the test data with replaced by .",
+     "reply": "{\"verdict\": \"CONTRADICTED\", \"excerpt\": \"This paper presents a general framework for constructing a prediction set with finite-sample exact coverage, conditional on the unit being selected by a given procedure.\", \"reason\": \"The cited paper proves selection-conditional coverage IS achievable via their JOMI framework, not that it is impossible for any selection rule.\"}"
+    }
+   ],
+   "model": "claude-sonnet-5"
+  }
+ ]
+}

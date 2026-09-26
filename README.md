@@ -16,7 +16,7 @@ mechanical parts of it.
 | `overclaim` | flags priority constructions, universal negatives, proof language and absolute superlatives ("we are the first", "nobody", "proven", "best ever") for you to review. Ordinary comparatives ("outperforms baselines", "SOTA on eleven tasks") are left alone. It never decides whether the claim is true. | free |
 | `source` | finds numeric claims in md/txt/tex files and looks for a matching value (a cell or a simple aggregate) in CSV/JSON files in the same folder | licensed |
 | `citation` | finds arXiv IDs, DOIs and URLs; checks they resolve; for `.bib` entries, compares authors and title with the arXiv / Crossref record; `.bbl` files are read for identifiers only | licensed |
-| `support` | **opt-in, experimental** (`--only support`; the model-read `--llm` option is unvalidated, see below). For sentences that cite an arXiv paper or DOI, looks for things the sentence asserts that are absent from the source's full text: a name, a date, a figure, a distinctive word such as "Mondrian". Reports `FLAGGED` or `UNVERIFIABLE` only, never `VERIFIED`, unless you also pass `--llm`. See "Citation support" below | licensed |
+| `support` | **opt-in, experimental** (`--only support`; the model-read `--llm` option is experimental with one recorded live run, see below). For sentences that cite an arXiv paper or DOI, looks for things the sentence asserts that are absent from the source's full text: a name, a date, a figure, a distinctive word such as "Mondrian". Reports `FLAGGED` or `UNVERIFIABLE` only, never `VERIFIED`, unless you also pass `--llm`. See "Citation support" below | licensed |
 | `consistency` | flags similar sentences in different files that state different numbers | licensed |
 | `registry` | checks numbers you have tagged in the text against a registry of values your own pipeline computed | licensed |
 | `benchmark` | checks that a stated gain matches the two numbers it is stated between | licensed |
@@ -288,13 +288,13 @@ extracted text is missed after normalization, and every miss examined was an
 artifact of the reference text rather than a lost word. That is one sample of
 arXiv papers; scanned or unusual PDFs are untested.
 
-### Optional: a model reads the passage (`--llm`) &mdash; EXPERIMENTAL, NOT VALIDATED
+### Optional: a model reads the passage (`--llm`) &mdash; EXPERIMENTAL
 
-> **WARNING: this has not been validated against a live model.** Its mechanics and its
-> passage selection are tested. The model's actual judgment has not been: no run against a
-> real model has been made, so nobody knows how often it is right. Treat every answer,
-> including `SUPPORTED`, as a lead to check by hand, never as a result. Use with caution.
-> Running `claimaudit check ... --only support --llm` prints this warning first.
+> **One live-model run has been done: Claude Sonnet 5, 2026-09-26, 16 cases.** The hard
+> rule held (no wrong claim came back `SUPPORTED`), and yield on true claims was low: 1 of 8
+> came back `SUPPORTED`, with the rest `UNCLEAR`. One run at temperature 0 is not extensive
+> validation. Treat every answer, including `SUPPORTED`, as a lead to check by hand.
+> Running `claimaudit check ... --only support --llm` prints this summary first.
 
 For sentences the plain check could not decide, `--only support --llm` sends the
 sentence and a few short excerpts of the cited paper to the Anthropic API (key from
@@ -322,12 +322,18 @@ it": a receipt for a person to glance at, not a proof. A run costs a few calls p
 
 Status: the mechanics are tested against scripted models, including ones that invent quotes,
 quote something irrelevant, ignore a figure, or obey text planted in the source, and passage
-selection reached the passage a person had identified in 15 of 15 real cases. It has **not been
-run against a live model on those cases.** To do that when you have an API key, run
-`ANTHROPIC_API_KEY=... python validation/llm_validate.py` from a checkout of this repository. It
-runs 16 cases against the real sources, fails if any wrong claim comes back `SUPPORTED`, and writes
-a results file that the test suite then re-checks offline. Until that has been run, this section
-makes no claim about accuracy.
+selection reached the passage a person had identified in 15 of 15 real cases. A first live-model
+run was done on 2026-09-26 against `claude-sonnet-5` on all 16 cases; the results are checked in
+as `fixtures/citation_support/llm_results.json` and three tests in `tests/test_judge.py`
+(`TestRecordedLiveRun`) re-check them offline. On that run: no wrong claim came back `SUPPORTED`
+(the hard rule held); every `SUPPORTED` or `CONTRADICTED` verdict carried a quote that verifies
+against the passages it was shown; and replaying the recorded replies through the offline harness
+reproduces the recorded verdicts. Yield was low: 1 of 8 true claims came back `SUPPORTED`, 1 of 8
+wrong ones as `CONTRADICTED`; the remaining 14 came back `UNCLEAR`, mostly because the model's
+quote did not match the shown passages verbatim and was discarded by the guard. That is one run
+at temperature 0 on 16 cases, not extensive validation. Rerun with
+`ANTHROPIC_API_KEY=... python validation/llm_validate.py`; the fail-on-false-`SUPPORTED` rule is
+enforced in that script and in the offline replay.
 
 ## Not in v0.1
 

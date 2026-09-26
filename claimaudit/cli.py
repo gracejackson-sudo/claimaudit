@@ -10,11 +10,11 @@ from .report import (render_text, render_json, render_error_json, Finding,
 
 LLM_WARNING = (
     "=" * 72 + "\n"
-    "  EXPERIMENTAL, AND NOT VALIDATED AGAINST A LIVE MODEL.\n"
-    "  The model-read check (--llm) has tested mechanics and tested passage\n"
-    "  selection, but the model's actual judgment has never been measured, so\n"
-    "  nobody knows how often it is right. Treat every answer, including\n"
-    "  SUPPORTED, as a lead to check by hand, not as a result. Use with caution.\n"
+    "  EXPERIMENTAL. One live-model run recorded: Claude Sonnet 5,\n"
+    "  2026-09-26, 16 cases. The hard rule held (no wrong claim came back\n"
+    "  SUPPORTED). Yield on true claims was 1 of 8 SUPPORTED; the rest\n"
+    "  UNCLEAR. One run at temperature 0 is not extensive validation.\n"
+    "  Treat every answer, including SUPPORTED, as a lead to check by hand.\n"
     + "=" * 72)
 
 
@@ -151,11 +151,13 @@ def main(argv=None):
     c.add_argument("--strict", action="store_true", help="also flag every/all (noisy)")
     c.add_argument("--max-urls", type=int, default=60)
     c.add_argument("--llm", action="store_true",
-                   help="EXPERIMENTAL, NOT VALIDATED against a live model. With the support check: have a model "
-                        "(Anthropic API, key from ANTHROPIC_API_KEY) read the cited passage for sentences the plain "
-                        "check could not decide. Sends the sentence and short excerpts of the cited paper to "
-                        "api.anthropic.com. A SUPPORTED answer must carry a quote that is found verbatim in the "
-                        "passages shown. Treat every answer, including SUPPORTED, as a lead to check by hand")
+                   help="EXPERIMENTAL. One recorded live run so far (Claude Sonnet 5, 2026-09-26, 16 cases): the hard "
+                        "rule held, yield on true claims was 1 of 8 SUPPORTED; the rest UNCLEAR. One run is not "
+                        "extensive validation. With the support check: have a model (Anthropic API, key from "
+                        "ANTHROPIC_API_KEY) read the cited passage for sentences the plain check could not decide. "
+                        "Sends the sentence and short excerpts of the cited paper to api.anthropic.com. A SUPPORTED "
+                        "answer must carry a quote that is found verbatim in the passages shown. Treat every answer, "
+                        "including SUPPORTED, as a lead to check by hand")
     c.add_argument("--llm-max-calls", type=int, default=25, help="most model calls per run (default 25)")
     c.add_argument("--llm-model", default=None, help="model id (default: $CLAIMAUDIT_MODEL or " + judge_mod.DEFAULT_MODEL + ")")
     c.add_argument("--exclude", action="append", default=[], help="glob to skip (repeatable); also reads .claimauditignore")
@@ -209,7 +211,7 @@ def main(argv=None):
                                 llm=ns.llm, llm_max_calls=ns.llm_max_calls, llm_model=ns.llm_model,
                                 usage_out=usage)
         if ns.llm:
-            print("--llm results are experimental and unvalidated: check every one by hand.", file=sys.stderr)
+            print("--llm results are experimental (one recorded live run, not extensive validation): check every one by hand.", file=sys.stderr)
         if usage.get("calls"):
             print(f"--llm: {usage['calls']} call(s) to {usage['model']}, {usage['input_tokens']} input and "
                   f"{usage['output_tokens']} output tokens", file=sys.stderr)
