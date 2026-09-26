@@ -165,3 +165,55 @@ def test_the_previous_generation_of_cached_verdicts_is_discarded(tmp_path, monke
 
     monkeypatch.setattr(citations.urllib.request, "urlopen", fake_urlopen)
     assert citations.default_fetch(url) == (0, ""), "a stale entry was served"
+
+
+# ===================================================================
+# A3. A PDF-only .tex wrapper reported as a clean document.
+# ===================================================================
+
+ADAM_WRAPPER = r"""%% 1412.6980-style wrapper
+\documentclass{article}
+\usepackage{pdfpages}
+\begin{document}
+\includepdf[pages=-]{adam.pdf}
+\end{document}
+"""
+
+INPUT_ONLY = r"""\documentclass{article}
+\begin{document}
+\input{paper_body}
+\end{document}
+"""
+
+
+def test_a_pdf_wrapper_is_unread_not_clean(tmp_path):
+    """Adam (1412.6980) is 298 bytes of \\includepdf. Zero findings is a lie."""
+    d = _write(tmp_path, {"main.tex": ADAM_WRAPPER})
+    found, _ = cli.run(d, paid=True, offline=True)
+    scan_hits = [f for f in found if f.check == "scan"]
+    assert scan_hits, "the wrapper passed as a clean document"
+    assert all(f.status == UNVERIFIABLE for f in scan_hits)
+    assert any("no prose could be read" in f.message for f in scan_hits)
+    assert any("includepdf" in f.evidence for f in scan_hits)
+    assert not any(f.status == FLAGGED for f in found)
+
+
+def test_an_input_only_tex_file_is_unread(tmp_path):
+    d = _write(tmp_path, {"main.tex": INPUT_ONLY})
+    found, _ = cli.run(d, only=["overclaim"])
+    assert any(f.check == "scan" and f.status == UNVERIFIABLE
+               and "no prose could be read" in f.message for f in found)
+
+
+def test_a_tex_file_with_real_sentences_is_not_called_unread(tmp_path):
+    d = _write(tmp_path, {"main.tex": "\\section{Results}\nNobody would publish this.\n"})
+    found, _ = cli.run(d, only=["overclaim"])
+    assert not any(f.check == "scan" and f.extra.get("unread") for f in found)
+    assert any(f.check == "overclaim" and "nobody" in f.message.lower() for f in found)
+
+
+def test_an_empty_markdown_file_is_still_harmless(tmp_path):
+    """A3 is about unread .tex, not a new rule that empty files are findings."""
+    d = _write(tmp_path, {"empty.md": "", "blank.md": "   \n\n"})
+    found, _ = cli.run(d, paid=True, offline=True)
+    assert found == []

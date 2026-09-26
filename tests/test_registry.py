@@ -252,7 +252,8 @@ def test_a_tag_in_a_latex_verbatim_block_is_not_a_claim(tmp_path):
     (tmp_path / "p.tex").write_text("\\begin{verbatim}\n% claim: target_mean = -0.39\n"
                                     "\\end{verbatim}\n")
     (tmp_path / "claims.json").write_text(json.dumps({}))
-    assert cli.run(str(tmp_path), only=["registry"], paid=True)[0] == []
+    found, _ = cli.run(str(tmp_path), only=["registry"], paid=True)
+    assert not any(f.check == "registry" for f in found)
 
 
 def test_latex_indentation_is_not_treated_as_a_code_block(tmp_path):

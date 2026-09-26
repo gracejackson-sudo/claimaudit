@@ -48,7 +48,14 @@ class Claim:
 # ------------------------------------------------------------------ cleaning
 def _strip_tex(t):
     t = re.sub(r"(?<!\\)%.*", "", t)                      # comments
-    t = re.sub(r"\\(?:cite\w*|ref|eqref|label|input|include|url|href)\*?(\[[^\]]*\])?\{[^{}]*\}", " ", t)
+    # Longer names first so \includepdf is not eaten as \include. These
+    # commands are scaffolding: leaving their arguments in would turn a
+    # PDF-wrapper or an \input-only file into fake prose.
+    t = re.sub(
+        r"\\(?:cite\w*|ref|eqref|label|input|includepdf|includegraphics|include|"
+        r"url|href|documentclass|usepackage|RequirePackage|begin|end)"
+        r"\*?(\[[^\]]*\])?\{[^{}]*\}",
+        " ", t)
     t = t.replace("\\%", "%").replace("\\pm", "±").replace("\\times", "x")
     t = t.replace("{,}", "").replace("~", " ").replace("\\\\", " ")
     t = re.sub(r"\\[()\[\]]", "", t).replace("$", "")

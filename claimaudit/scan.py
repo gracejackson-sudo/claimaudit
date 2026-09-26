@@ -107,7 +107,7 @@ def read_notebook(path):
                        if c.get("cell_type") in PROSE_CELLS)
 
 
-def no_prose_reason(path):
+def no_prose_reason(path, text=None):
     """Why a container file we could open yielded no prose. Best effort.
 
     Silence has to be explained: a notebook of nothing but code cells is not
@@ -115,6 +115,11 @@ def no_prose_reason(path):
     """
     ext = os.path.splitext(path)[1].lower()
     try:
+        if ext == ".tex":
+            raw = text if text is not None else read(path)
+            if re.search(r"\\includepdf\b", raw):
+                return "it wraps a PDF with \\includepdf, and PDFs are not read"
+            return "stripping the LaTeX produced no readable sentences"
         if ext == ".ipynb":
             with open(path, encoding="utf-8") as fh:
                 cells = _cells(json.load(fh))
