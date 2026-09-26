@@ -221,6 +221,11 @@ telemetry. Citation lookups are cached in `~/.cache/claimaudit`.
 
 ## Licensing
 
+claimaudit is released under the [MIT license](LICENSE). That covers all of the
+code, including the checks that ask for a key: the license grants use of every
+check, and the key below is a convenience and a way to support the project, not
+a legal condition of use.
+
 The `overclaim` check is free. `source`, `citation`, `consistency`, `registry`,
 `benchmark` and `seeds` need a license key. The landing page is
 [`docs/index.html`](docs/index.html).
@@ -241,7 +246,7 @@ That writes the key to `~/.claimaudit/license.json` (or `$CLAIMAUDIT_HOME`).
 Setting `CLAIMAUDIT_LICENSE_KEY` in the environment works too, which is what
 CI uses. `claimaudit status` shows which tier you are on.
 
-**This is an honor system.** The key is a shared token, not a
+**This is an honor system, and the MIT license makes that explicit.** The key is a shared token, not a
 cryptographic license. Any non-empty key unlocks the paid checks; an empty or
 all-whitespace key does not. Nothing is checked against a server — `activate`
 stores the key and sends nothing anywhere, and no check ever phones home.

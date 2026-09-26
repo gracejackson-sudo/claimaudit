@@ -1,5 +1,7 @@
 """License gating: an honor system, checked locally, with no network call.
 
+The code is MIT licensed (see LICENSE), so the key is not a legal condition of use.
+
 A license key is a token shown on docs/success.html, where the Stripe Payment
 Link below redirects after payment; for now it is one key shared by every
 buyer. Any non-empty key unlocks the paid checks. Nothing checks

@@ -7,7 +7,8 @@ name = "claimaudit"
 version = "0.1.0"
 description = "A first-pass audit of the claims, citations and numbers in a directory of documents. Surfaces things for a human to check."
 readme = "README.md"
-license = {file = "LICENSE.txt"}
+license = {text = "MIT"}
+classifiers = ["License :: OSI Approved :: MIT License"]
 requires-python = ">=3.9"
 dependencies = []
 
