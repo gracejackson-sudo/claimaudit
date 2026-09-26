@@ -151,10 +151,11 @@ def main(argv=None):
     c.add_argument("--strict", action="store_true", help="also flag every/all (noisy)")
     c.add_argument("--max-urls", type=int, default=60)
     c.add_argument("--llm", action="store_true",
-                   help="with the support check: have a model (Anthropic API, key from ANTHROPIC_API_KEY) read the "
-                        "cited passage for sentences the plain check could not decide. Sends the sentence and short "
-                        "excerpts of the cited paper to api.anthropic.com. A SUPPORTED answer must carry a quote "
-                        "that is found verbatim in the passages shown")
+                   help="EXPERIMENTAL, NOT VALIDATED against a live model. With the support check: have a model "
+                        "(Anthropic API, key from ANTHROPIC_API_KEY) read the cited passage for sentences the plain "
+                        "check could not decide. Sends the sentence and short excerpts of the cited paper to "
+                        "api.anthropic.com. A SUPPORTED answer must carry a quote that is found verbatim in the "
+                        "passages shown. Treat every answer, including SUPPORTED, as a lead to check by hand")
     c.add_argument("--llm-max-calls", type=int, default=25, help="most model calls per run (default 25)")
     c.add_argument("--llm-model", default=None, help="model id (default: $CLAIMAUDIT_MODEL or " + judge_mod.DEFAULT_MODEL + ")")
     c.add_argument("--exclude", action="append", default=[], help="glob to skip (repeatable); also reads .claimauditignore")
