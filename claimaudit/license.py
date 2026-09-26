@@ -9,7 +9,7 @@ from __future__ import annotations
 import json, os, time
 
 # Replace this with the Stripe Payment Link. One line. (Same string in README.md and docs/index.html.)
-PURCHASE_URL = "https://buy.stripe.com/REPLACE_ME"
+PURCHASE_URL = "https://buy.stripe.com/8x2dRb5ND1oP75V1DWgEg00"
 PAID_CHECKS = ("source", "citation", "consistency", "registry", "benchmark", "seeds")
 FREE_CHECKS = ("overclaim",)
 

@@ -227,7 +227,7 @@ The `overclaim` check is free. `source`, `citation`, `consistency`, `registry`,
 To buy, pay through the Stripe Payment Link:
 
 <!-- Replace this with the Stripe Payment Link. One line. Same string in claimaudit/license.py and docs/index.html. -->
-https://buy.stripe.com/REPLACE_ME
+https://buy.stripe.com/8x2dRb5ND1oP75V1DWgEg00
 
 The key and install instructions arrive **by email, sent by hand** after the
 payment comes through. It is not instant. Then:
