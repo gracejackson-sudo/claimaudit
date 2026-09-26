@@ -173,13 +173,25 @@ def test_the_previous_generation_of_cached_verdicts_is_discarded(tmp_path, monke
 # A3. A PDF-only .tex wrapper reported as a clean document.
 # ===================================================================
 
-ADAM_WRAPPER = r"""%% 1412.6980-style wrapper
-\documentclass{article}
-\usepackage{pdfpages}
-\begin{document}
-\includepdf[pages=-]{adam.pdf}
-\end{document}
-"""
+# arxiv.tex from the arXiv source of 1412.6980, byte for byte (it has no
+# trailing newline). The hyperref block is what hid it: stripped, it reads as
+# three "sentences", so a fixture without it tested a file that does not exist.
+ADAM_WRAPPER = (
+    "\\documentclass[a4paper]{article}\n"
+    "\\pdfoutput=1\n"
+    "\\usepackage{hyperref}\n"
+    "\\hypersetup{\n"
+    "  pdfinfo={\n"
+    "    Title={Adam: A Method for Stochastic Optimization},\n"
+    "    Author={Diederik P. Kingma, Jimmy Lei Ba}\n"
+    "  }\n"
+    "}\n"
+    "\n"
+    "\\usepackage{pdfpages}\n"
+    "\\begin{document}\n"
+    "\\includepdf[pages=1-last]{0_adam_main.pdf}\n"
+    "\\end{document}"
+)
 
 INPUT_ONLY = r"""\documentclass{article}
 \begin{document}
@@ -188,16 +200,69 @@ INPUT_ONLY = r"""\documentclass{article}
 """
 
 
+def test_the_adam_fixture_is_the_real_file():
+    """Guard against the fixture drifting back to a convenient substitute."""
+    import os
+    for root in ("/tmp/papers", "/tmp/papers2"):
+        p = os.path.join(root, "src", "1412.6980", "arxiv.tex")
+        if os.path.exists(p):
+            with open(p, encoding="utf-8") as fh:
+                assert fh.read() == ADAM_WRAPPER
+            return
+    pytest.skip("the downloaded arXiv source of 1412.6980 is not on this machine")
+
+
+def test_the_adam_preamble_does_read_as_sentences():
+    """The trap itself: if this stops being true the fixture no longer tests it."""
+    assert list(sentences(ADAM_WRAPPER, "arxiv.tex"))
+
+
 def test_a_pdf_wrapper_is_unread_not_clean(tmp_path):
-    """Adam (1412.6980) is 298 bytes of \\includepdf. Zero findings is a lie."""
-    d = _write(tmp_path, {"main.tex": ADAM_WRAPPER})
+    """Adam (1412.6980) is a preamble and \\includepdf. Zero findings is a lie."""
+    d = _write(tmp_path, {"arxiv.tex": ADAM_WRAPPER})
     found, _ = cli.run(d, paid=True, offline=True)
     scan_hits = [f for f in found if f.check == "scan"]
     assert scan_hits, "the wrapper passed as a clean document"
     assert all(f.status == UNVERIFIABLE for f in scan_hits)
     assert any("no prose could be read" in f.message for f in scan_hits)
-    assert any("includepdf" in f.evidence for f in scan_hits)
+    assert any("0_adam_main.pdf" in f.evidence and "includepdf" in f.evidence
+               and "PDFs are not read" in f.evidence for f in scan_hits)
+    assert cli.unread(found)
     assert not any(f.status == FLAGGED for f in found)
+
+
+def test_a_pdf_wrapper_fails_the_cli_gate(tmp_path, capsys):
+    """The re-measure saw exit 0 on Adam. An unread paper must not pass a gate."""
+    d = _write(tmp_path, {"arxiv.tex": ADAM_WRAPPER})
+    assert cli.main(["check", d, "--offline"]) == 1
+    assert "0_adam_main.pdf" in capsys.readouterr().out
+
+
+def test_a_body_that_is_only_an_included_pdf_figure_is_unread(tmp_path):
+    tex = ADAM_WRAPPER.replace("\\includepdf[pages=1-last]{0_adam_main.pdf}",
+                               "\\includegraphics[width=\\textwidth]{paper.pdf}")
+    d = _write(tmp_path, {"arxiv.tex": tex})
+    found, _ = cli.run(d, only=["overclaim"])
+    assert any(f.extra.get("unread") and "paper.pdf" in f.evidence
+               and "includegraphics" in f.evidence for f in found)
+
+
+def test_prose_plus_an_included_pdf_is_still_audited(tmp_path):
+    tex = ADAM_WRAPPER.replace(
+        "\\includepdf[pages=1-last]{0_adam_main.pdf}",
+        "Nobody would publish this.\n\\includepdf[pages=1-last]{0_adam_main.pdf}")
+    d = _write(tmp_path, {"arxiv.tex": tex})
+    found, _ = cli.run(d, only=["overclaim"])
+    assert not cli.unread(found)
+    assert any(f.check == "overclaim" and "nobody" in f.message.lower() for f in found)
+
+
+def test_a_commented_out_includepdf_does_not_make_a_wrapper(tmp_path):
+    tex = ("\\documentclass{article}\n\\begin{document}\n"
+           "% \\includepdf{old.pdf}\nNobody would publish this.\n\\end{document}\n")
+    d = _write(tmp_path, {"main.tex": tex})
+    found, _ = cli.run(d, only=["overclaim"])
+    assert not cli.unread(found)
 
 
 def test_an_input_only_tex_file_is_unread(tmp_path):

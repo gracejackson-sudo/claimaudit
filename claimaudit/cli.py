@@ -41,10 +41,11 @@ def run(path, only=None, offline=False, strict=False, max_urls=60, paid=False,
                 # A container we opened but got no prose out of looks exactly
                 # like a clean document, so it has to say why it is empty.
                 # body.strip() is not enough: a .tex wrapper still has a
-                # preamble, and after stripping it has zero sentences.
-                tex_silent = (
-                    p.lower().endswith(".tex")
-                    and not any(True for _ in claims_mod.sentences(body or "", rel))
+                # preamble, and after stripping it has zero sentences -- or
+                # a few, from hyperref metadata, that are not prose at all.
+                tex_silent = p.lower().endswith(".tex") and (
+                    not any(True for _ in claims_mod.sentences(body or "", rel))
+                    or scan.wraps_pdf_only(body or "")
                 )
                 if not body.strip() or tex_silent:
                     why = scan.no_prose_reason(p, body)

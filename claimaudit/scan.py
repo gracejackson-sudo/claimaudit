@@ -2,6 +2,8 @@
 from __future__ import annotations
 import fnmatch, json, os, re, xml.etree.ElementTree as ET, zipfile
 
+from .claims import sentences
+
 TEXT_EXT = {".md", ".markdown", ".txt", ".tex", ".rst", ".ipynb", ".docx"}
 DATA_EXT = {".csv", ".json"}
 BIB_EXT = {".bib", ".bbl"}
@@ -107,6 +109,36 @@ def read_notebook(path):
                        if c.get("cell_type") in PROSE_CELLS)
 
 
+PDF_INCLUDE = re.compile(
+    r"\\(includepdf)\*?(?:\[[^\]]*\])?\{([^{}]*)\}"
+    r"|\\(includegraphics)\*?(?:\[[^\]]*\])?\{([^{}]*\.pdf)\}", re.I)
+
+
+def _tex_uncommented(text):
+    return re.sub(r"(?<!\\)%.*", "", text)
+
+
+def tex_body(text):
+    """What lies between \\begin{document} and \\end{document}, or None."""
+    m = re.search(r"\\begin\{document\}(.*?)(?:\\end\{document\}|\Z)",
+                  _tex_uncommented(text), re.S)
+    return m.group(1) if m else None
+
+
+def wraps_pdf_only(text):
+    """True when the document body includes a PDF and has no sentence of its own.
+
+    A preamble is not prose, but hyperref metadata and \\pdfoutput=1 read as
+    sentences once the LaTeX is stripped, which is how Adam's 14-line wrapper
+    passed as a clean paper. Only the body can say whether the paper's text is
+    in this file or in a PDF we never open.
+    """
+    body = tex_body(text)
+    if body is None or not PDF_INCLUDE.search(body):
+        return False
+    return not any(True for _ in sentences(body, "body.tex"))
+
+
 def no_prose_reason(path, text=None):
     """Why a container file we could open yielded no prose. Best effort.
 
@@ -117,8 +149,11 @@ def no_prose_reason(path, text=None):
     try:
         if ext == ".tex":
             raw = text if text is not None else read(path)
-            if re.search(r"\\includepdf\b", raw):
-                return "it wraps a PDF with \\includepdf, and PDFs are not read"
+            m = PDF_INCLUDE.search(tex_body(raw) or _tex_uncommented(raw))
+            if m:
+                cmd, pdf = (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(4))
+                return (f"it wraps a PDF ({pdf.strip()}) with \\{cmd}, and PDFs are not "
+                        f"read, so the paper's text was never seen")
             return "stripping the LaTeX produced no readable sentences"
         if ext == ".ipynb":
             with open(path, encoding="utf-8") as fh:
