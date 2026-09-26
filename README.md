@@ -152,6 +152,21 @@ It does **not**: follow a calculation, read numbers out of figures or PDFs,
 check that a cited paper supports the sentence citing it, or verify anything
 that has no matching CSV/JSON in the folder.
 
+### The authored-voice assumption
+
+Every sentence the tool can read is audited as though the author is asserting
+it. It cannot tell authored claims from quoted, templated, or machine-generated
+text. That is not an `overclaim` quirk — it is true of every check that reads
+prose.
+
+On the fifteen-paper run this produced real flags on text the authors did not
+write: a few-shot prompt exemplar ("The coin was flipped by no one.") was a
+universal negative, a dataset row ("Jonas Valanciunas beat the buzzer.") was a
+superiority claim, and a language model's own generated sample was a novelty
+claim. The workaround today is `--exclude` on those files. There is no
+automatic skip, because a rule safe enough to apply without a human would
+also drop authored prose we have no way to recognise.
+
 ### What the newer checks changed: nothing, on those eight
 
 `registry`, `benchmark`, `seeds`, notebook and `.docx` reading were added
