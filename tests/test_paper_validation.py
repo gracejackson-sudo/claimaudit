@@ -296,3 +296,30 @@ def test_bbl_does_not_claim_authors_and_title_matched():
     assert found and found[0].status != FLAGGED
     assert "matches bib authors/title" not in found[0].message
     assert "resolves" in found[0].message
+
+
+# ===================================================================
+# A5. Unknown macros vanished and fused the surrounding words.
+# ===================================================================
+
+def _tex_sent(text):
+    return " ".join(s for _l, s in sentences(text, "p.tex"))
+
+
+def test_an_unknown_macro_leaves_a_readable_name():
+    """ViT's \\gls{vit}/\\vit{} and LLaMA's \\llamathirteen were deleted,
+    so the evidence read 's dominate ResNets' and '-13B outperforms'."""
+    import re
+    vit = _tex_sent(r"First, \vit{}s dominate ResNets on the same data.")
+    assert re.search(r"\bvit", vit, re.I)
+    assert not re.search(r"\bs dominate\b", vit)
+    llama = _tex_sent(r"\llamathirteen-13B outperforms GPT-3 (175B).")
+    assert "llamathirteen" in llama.lower()
+    assert not llama.strip().startswith("-13B")
+
+
+def test_a_macro_with_real_contents_still_unwraps():
+    r"""\emph{817} must stay a number; the placeholder is for empty/unknown names."""
+    joined = _tex_sent(r"We get \(90.1\%\) coverage across \emph{817} rows.")
+    assert "90.1%" in joined and "817" in joined
+    assert "emph" not in joined.lower()

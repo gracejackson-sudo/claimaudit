@@ -59,9 +59,21 @@ def _strip_tex(t):
     t = t.replace("\\%", "%").replace("\\pm", "±").replace("\\times", "x")
     t = t.replace("{,}", "").replace("~", " ").replace("\\\\", " ")
     t = re.sub(r"\\[()\[\]]", "", t).replace("$", "")
+    # Spacing and layout produce no words. Deleting an unknown macro used to
+    # fuse the characters on either side ("s dominate ResNets", "-13B
+    # outperforms") so the name is left as a readable stand-in instead.
+    t = re.sub(
+        r"\\(?:noindent|centering|raggedright|raggedleft|hfill|vfill|"
+        r"hspace|vspace|newline|newpage|clearpage|linebreak|pagebreak|"
+        r"maketitle|tableofcontents|listoffigures|listoftables|"
+        r"item|quad|qquad|smallskip|medskip|bigskip|"
+        r"enspace|thinspace|phantom|hphantom|vphantom|"
+        r"relax|protect|leavevmode|par)\*?(?:\[[^\]]*\])?(?:\{[^{}]*\})?",
+        " ", t, flags=re.I)
     for _ in range(4):
-        t = re.sub(r"\\[A-Za-z]+\*?(\[[^\]]*\])?\{([^{}]*)\}", r"\2", t)
-    t = re.sub(r"\\[A-Za-z]+\*?", " ", t)
+        t = re.sub(r"\\([A-Za-z]+)\*?(\[[^\]]*\])?\{([^{}]*)\}",
+                   lambda m: m.group(1) if m.group(3) == "" else m.group(3), t)
+    t = re.sub(r"\\([A-Za-z]+)\*?", r"\1", t)
     t = t.replace("&", " | ").replace("{", "").replace("}", "")
     return t
 
