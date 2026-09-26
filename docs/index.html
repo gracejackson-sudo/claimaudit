@@ -112,11 +112,11 @@ claimaudit status</pre>
 <ul>
   <li><strong>Precision over recall.</strong> It stays quiet unless it has something to compare against, so it misses far more than it flags.</li>
   <li><strong>Honor-system license.</strong> No server validates the key.</li>
-  <li><strong>No license server and no telemetry.</strong> The only network requests are the citation lookups (arXiv, Crossref, and URLs in your documents), and <code>--offline</code> turns those off.</li>
-  <li><strong>No LLM layer.</strong> Nothing here uses a language model to judge meaning.</li>
+  <li><strong>No license server and no telemetry.</strong> By default the only network requests are the citation lookups (arXiv, Crossref, and URLs in your documents), and <code>--offline</code> turns those off. The experimental <code>support</code> check, which you have to ask for by name, also downloads the cited papers.</li>
+  <li><strong>No language model by default.</strong> None of the checks uses one unless you add the experimental <code>--llm</code> option to the experimental <code>support</code> check, which sends a sentence and excerpts of the cited paper to the Anthropic API. That option has not been validated against a live model. Nothing is sent unless you pass it.</li>
   <li><strong>It treats all prose as the author's voice.</strong> Quoted text, prompt exemplars, dataset rows and model-generated samples are audited as if the author asserted them, so they can be flagged. Use <code>--exclude</code> on those files.</li>
   <li><strong>PDFs are not read.</strong> Text inside a PDF pulled in with <code>\includepdf</code> is not read; the tool says so rather than reporting a clean result.</li>
-  <li><strong>The citation check resolves identifiers.</strong> It does not check that the cited paper supports the sentence citing it.</li>
+  <li><strong>The citation check resolves identifiers.</strong> It does not check that the cited paper supports the sentence citing it. The experimental <code>support</code> check tries to, and can only catch a few kinds of mistake.</li>
 </ul>
 
 <footer>claimaudit 0.1.0. No build step: this page is one HTML file.</footer>

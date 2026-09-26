@@ -680,9 +680,9 @@ def _judged(judge, pair, srcs, status, msg, ev):
             "note": v.note, "model": judge.client.model, "windows": v.windows}
     sid = s.ident.split(":", 1)[1]
     if v.verdict == jd.SUPPORTED:
-        return (VERIFIED, f"SUPPORTED by a quoted passage of {sid} (model-judged; a receipt to check, not a proof): {v.reason}",
+        return (VERIFIED, f"[EXPERIMENTAL, UNVALIDATED] SUPPORTED by a quoted passage of {sid} (model-judged; a receipt to check, not a proof): {v.reason}",
                 f"{ev}  <-  \u201c{v.quote}\u201d", more)
     if v.verdict == jd.CONTRADICTED:
-        return (FLAGGED, f"CONTRADICTED by a quoted passage of {sid}: {v.reason}", f"{ev}  vs  \u201c{v.quote}\u201d", more)
+        return (FLAGGED, f"[EXPERIMENTAL, UNVALIDATED] CONTRADICTED by a quoted passage of {sid}: {v.reason}", f"{ev}  vs  \u201c{v.quote}\u201d", more)
     why = v.note or v.reason or "the passages shown neither support nor contradict it"
-    return UNVERIFIABLE, f"UNCLEAR \u2014 NEEDS HUMAN REVIEW ({sid}): {why}", ev, more
+    return UNVERIFIABLE, f"[EXPERIMENTAL] UNCLEAR \u2014 NEEDS HUMAN REVIEW ({sid}): {why}", ev, more

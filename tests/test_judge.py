@@ -243,6 +243,7 @@ class TestInTheCheck:
         j, _ = judge_with(supported(), NONE)
         f, = self.check(SENT, {ID: source()}, j)
         assert f.status == VERIFIED and "SUPPORTED" in f.message and GOOD_QUOTE in f.evidence
+        assert "EXPERIMENTAL" in f.message and "UNVALIDATED" in f.message
         assert f.extra["quote"] == GOOD_QUOTE and f.extra["model"] == "fake-model"
 
     def test_contradicted_becomes_flagged(self):
@@ -253,7 +254,7 @@ class TestInTheCheck:
     def test_unclear_says_a_human_must_look(self):
         j, _ = judge_with({"verdict": "UNCLEAR", "reason": "not addressed"})
         f, = self.check(SENT, {ID: source()}, j)
-        assert f.status == UNVERIFIABLE and "NEEDS HUMAN REVIEW" in f.message
+        assert f.status == UNVERIFIABLE and "NEEDS HUMAN REVIEW" in f.message and "EXPERIMENTAL" in f.message
 
     def test_layer_a_flags_are_not_second_guessed(self):
         j, fake = judge_with(supported(), NONE)
@@ -364,6 +365,25 @@ class TestCli:
         findings, _ = cli.run(str(tmp_path), ["support"], offline=False, paid=True, llm=True,
                               fetch=lambda u, method="GET", timeout=15: (0, ""))
         assert any("ANTHROPIC_API_KEY is not set" in f.message for f in findings)
+
+    def test_the_warning_is_printed_before_anything_runs(self, tmp_path, monkeypatch, capsys):
+        from claimaudit import cli
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        monkeypatch.setenv("CLAIMAUDIT_LICENSE_KEY", "k")
+        monkeypatch.setattr(support, "NetworkProvider", lambda *a, **k: (lambda ident: ft.Source(ident, note="stub")))
+        (tmp_path / "a.tex").write_text("Their matrix is rank-2~\\cite{a}.")
+        (tmp_path / "r.bib").write_text("@article{a, title={T}, author={Zeng, X}, eprint={2606.24020}}")
+        cli.main(["check", str(tmp_path), "--only", "support", "--llm", "--json"])
+        cap = capsys.readouterr()
+        assert "NOT VALIDATED AGAINST A LIVE MODEL" in cap.err and "Use with caution" in cap.err
+        assert cap.out.lstrip().startswith("{")                    # stdout stays clean JSON
+
+    def test_no_warning_without_llm(self, tmp_path, monkeypatch, capsys):
+        from claimaudit import cli
+        monkeypatch.setenv("CLAIMAUDIT_LICENSE_KEY", "k")
+        (tmp_path / "a.md").write_text("Plain text.")
+        cli.main(["check", str(tmp_path), "--only", "support"])
+        assert "NOT VALIDATED" not in capsys.readouterr().err
 
     def test_llm_needs_the_support_check(self, tmp_path, monkeypatch, capsys):
         from claimaudit import cli

@@ -8,6 +8,16 @@ from .report import (render_text, render_json, render_error_json, Finding,
                      FLAGGED, UNVERIFIABLE)
 
 
+LLM_WARNING = (
+    "=" * 72 + "\n"
+    "  EXPERIMENTAL, AND NOT VALIDATED AGAINST A LIVE MODEL.\n"
+    "  The model-read check (--llm) has tested mechanics and tested passage\n"
+    "  selection, but the model's actual judgment has never been measured, so\n"
+    "  nobody knows how often it is right. Treat every answer, including\n"
+    "  SUPPORTED, as a lead to check by hand, not as a result. Use with caution.\n"
+    + "=" * 72)
+
+
 def _and(items):
     items = list(items)
     if len(items) == 1:
@@ -188,6 +198,8 @@ def main(argv=None):
         usage = {}
         if ns.llm and not (only and "support" in only):
             return fail("--llm needs the support check: add --only support")
+        if ns.llm:
+            print(LLM_WARNING, file=sys.stderr)
         if ns.llm and not ns.offline:
             print("--llm: sentences and short excerpts of the cited papers will be sent to api.anthropic.com "
                   f"(at most {ns.llm_max_calls} calls)", file=sys.stderr)
@@ -195,6 +207,8 @@ def main(argv=None):
                                 paid=(t == "paid"), exclude=ns.exclude, registry_path=ns.registry,
                                 llm=ns.llm, llm_max_calls=ns.llm_max_calls, llm_model=ns.llm_model,
                                 usage_out=usage)
+        if ns.llm:
+            print("--llm results are experimental and unvalidated: check every one by hand.", file=sys.stderr)
         if usage.get("calls"):
             print(f"--llm: {usage['calls']} call(s) to {usage['model']}, {usage['input_tokens']} input and "
                   f"{usage['output_tokens']} output tokens", file=sys.stderr)

@@ -16,7 +16,7 @@ mechanical parts of it.
 | `overclaim` | flags priority constructions, universal negatives, proof language and absolute superlatives ("we are the first", "nobody", "proven", "best ever") for you to review. Ordinary comparatives ("outperforms baselines", "SOTA on eleven tasks") are left alone. It never decides whether the claim is true. | free |
 | `source` | finds numeric claims in md/txt/tex files and looks for a matching value (a cell or a simple aggregate) in CSV/JSON files in the same folder | licensed |
 | `citation` | finds arXiv IDs, DOIs and URLs; checks they resolve; for `.bib` entries, compares authors and title with the arXiv / Crossref record; `.bbl` files are read for identifiers only | licensed |
-| `support` | **opt-in, experimental** (`--only support`). For sentences that cite an arXiv paper or DOI, looks for things the sentence asserts that are absent from the source's full text: a name, a date, a figure, a distinctive word such as "Mondrian". Reports `FLAGGED` or `UNVERIFIABLE` only, never `VERIFIED`, unless you also pass `--llm`. See "Citation support" below | licensed |
+| `support` | **opt-in, experimental** (`--only support`; the model-read `--llm` option is unvalidated, see below). For sentences that cite an arXiv paper or DOI, looks for things the sentence asserts that are absent from the source's full text: a name, a date, a figure, a distinctive word such as "Mondrian". Reports `FLAGGED` or `UNVERIFIABLE` only, never `VERIFIED`, unless you also pass `--llm`. See "Citation support" below | licensed |
 | `consistency` | flags similar sentences in different files that state different numbers | licensed |
 | `registry` | checks numbers you have tagged in the text against a registry of values your own pipeline computed | licensed |
 | `benchmark` | checks that a stated gain matches the two numbers it is stated between | licensed |
@@ -288,7 +288,13 @@ extracted text is missed after normalization, and every miss examined was an
 artifact of the reference text rather than a lost word. That is one sample of
 arXiv papers; scanned or unusual PDFs are untested.
 
-### Optional: a model reads the passage (`--llm`) &mdash; built, not yet validated on live runs
+### Optional: a model reads the passage (`--llm`) &mdash; EXPERIMENTAL, NOT VALIDATED
+
+> **WARNING: this has not been validated against a live model.** Its mechanics and its
+> passage selection are tested. The model's actual judgment has not been: no run against a
+> real model has been made, so nobody knows how often it is right. Treat every answer,
+> including `SUPPORTED`, as a lead to check by hand, never as a result. Use with caution.
+> Running `claimaudit check ... --only support --llm` prints this warning first.
 
 For sentences the plain check could not decide, `--only support --llm` sends the
 sentence and a few short excerpts of the cited paper to the Anthropic API (key from
@@ -316,9 +322,12 @@ it": a receipt for a person to glance at, not a proof. A run costs a few calls p
 
 Status: the mechanics are tested against scripted models, including ones that invent quotes,
 quote something irrelevant, ignore a figure, or obey text planted in the source, and passage
-selection reached the passage a person had identified in 15 of 15 real cases. It has **not yet
-been run against a live model on those cases**; `validation/llm_validate.py` does that, and
-this section will say what it found once it has.
+selection reached the passage a person had identified in 15 of 15 real cases. It has **not been
+run against a live model on those cases.** To do that when you have an API key, run
+`ANTHROPIC_API_KEY=... python validation/llm_validate.py` from a checkout of this repository. It
+runs 16 cases against the real sources, fails if any wrong claim comes back `SUPPORTED`, and writes
+a results file that the test suite then re-checks offline. Until that has been run, this section
+makes no claim about accuracy.
 
 ## Not in v0.1
 
