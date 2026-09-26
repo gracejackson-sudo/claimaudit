@@ -33,7 +33,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install claimaudit
+      # claimaudit is not on PyPI; install from source. Pin to a commit or tag in your
+      # own copy of this workflow if you want the CI to be reproducible.
+      - run: pip install git+https://github.com/gracejackson-sudo/claimaudit.git
 
       # These are paid checks. Without a key they are skipped and the job
       # passes, so a fork without access to the secret is not broken by it.
@@ -53,7 +55,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install claimaudit
+      # claimaudit is not on PyPI; install from source. Pin to a commit or tag in your
+      # own copy of this workflow if you want the CI to be reproducible.
+      - run: pip install git+https://github.com/gracejackson-sudo/claimaudit.git
 
       - name: Report
         env:
