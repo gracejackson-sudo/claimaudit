@@ -108,7 +108,7 @@ def test_a_refusal_is_not_written_to_the_cache(tmp_path, monkeypatch):
     class Refused(Exception):
         pass
 
-    def fake_urlopen(req, timeout=15):
+    def fake_urlopen(req, timeout=15, context=None):
         calls.append(req.full_url)
         raise citations.urllib.error.HTTPError(req.full_url, 406, "Not Acceptable", {}, None)
 
@@ -117,6 +117,46 @@ def test_a_refusal_is_not_written_to_the_cache(tmp_path, monkeypatch):
     assert citations.default_fetch(url) == (406, "")
     assert citations.default_fetch(url) == (406, "")
     assert len(calls) == 2, "the 406 was served from cache instead of being retried"
+
+
+def _client_hello(ctx):
+    """The bytes this context puts on the wire first, without a network."""
+    import ssl
+    inc, out = ssl.MemoryBIO(), ssl.MemoryBIO()
+    tls = ctx.wrap_bio(inc, out, server_hostname="export.arxiv.org")
+    with pytest.raises(ssl.SSLWantReadError):
+        tls.do_handshake()
+    return out.read()
+
+
+def test_the_arxiv_request_offers_the_alpn_arxiv_serves(tmp_path, monkeypatch):
+    """55 of 60 arXiv lookups came back 406 while curl got 200.
+
+    Measured from this machine, interleaved, same ids and pacing: urllib as it
+    was, 0 of 10; urllib with ALPN http/1.1, 20 of 20; curl sending urllib's
+    exact headers over HTTP/1.1, 10 of 10; urllib with curl's headers, 0 of 10.
+    The difference is the TLS ClientHello, so that is what is pinned here, on
+    the context default_fetch really hands to urlopen.
+    """
+    import ssl
+    monkeypatch.setenv("CLAIMAUDIT_CACHE", str(tmp_path / "c"))
+    monkeypatch.setattr(citations, "ARXIV_MIN_INTERVAL", 0)
+    sent = []
+
+    def fake_urlopen(req, timeout=15, context=None):
+        sent.append((req, context))
+        raise OSError("no network in tests")
+
+    monkeypatch.setattr(citations.urllib.request, "urlopen", fake_urlopen)
+    citations.default_fetch(citations.ARXIV_API + "1810.04805")
+    (req, ctx), = sent
+    assert req.get_header("User-agent") == citations.UA
+    assert isinstance(ctx, ssl.SSLContext)
+    assert ctx.verify_mode == ssl.CERT_REQUIRED and ctx.check_hostname
+    alpn = b"\x00\x10" + b"\x00\x0b" + b"\x00\x09" + b"\x08http/1.1"
+    assert alpn in _client_hello(ctx)
+    # What was refused: Python's default context offers no ALPN at all.
+    assert b"http/1.1" not in _client_hello(ssl.create_default_context())
 
 
 def test_an_answer_is_still_cached(tmp_path, monkeypatch):
@@ -136,7 +176,7 @@ def test_an_answer_is_still_cached(tmp_path, monkeypatch):
         def __exit__(self, *a):
             return False
 
-    def fake_urlopen(req, timeout=15):
+    def fake_urlopen(req, timeout=15, context=None):
         calls.append(req.full_url)
         return Resp()
 
@@ -162,7 +202,7 @@ def test_the_previous_generation_of_cached_verdicts_is_discarded(tmp_path, monke
     with open(key, "w") as fh:                      # a version-1 entry, no "v"
         json.dump({"s": 200, "b": "<feed>poisoned</feed>"}, fh)
 
-    def fake_urlopen(req, timeout=15):
+    def fake_urlopen(req, timeout=15, context=None):
         raise OSError("no network")
 
     monkeypatch.setattr(citations.urllib.request, "urlopen", fake_urlopen)

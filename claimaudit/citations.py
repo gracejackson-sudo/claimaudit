@@ -3,7 +3,7 @@ and, for .bib entries with metadata, that authors and title match the public
 record. .bbl files contribute identifiers only. Whether a paper actually
 supports the sentence citing it is NOT checked."""
 from __future__ import annotations
-import json, os, re, time, unicodedata, urllib.request, urllib.error, urllib.parse
+import json, os, re, ssl, time, unicodedata, urllib.request, urllib.error, urllib.parse
 from .report import Finding, VERIFIED, FLAGGED, UNVERIFIABLE
 
 UA = ("claimaudit/0.1 (citation checker; +https://pypi.org/project/claimaudit/) "
@@ -26,6 +26,23 @@ _last_arxiv_call = 0.0
 # version 2 discards everything written while a blocked arXiv response was
 # being recorded as "not found".
 CACHE_VERSION = 2
+
+# arXiv's CDN answers most requests whose TLS ClientHello offers no ALPN with
+# an empty 406, and Python's default context offers none. The request line and
+# headers make no difference: curl sending urllib's exact headers over
+# HTTP/1.1 is served, urllib with curl's headers is refused. Offering
+# http/1.1 -- which is what urllib speaks -- is what gets an answer.
+ALPN = ["http/1.1"]
+_tls = None
+
+
+def tls_context():
+    global _tls
+    if _tls is None:
+        ctx = ssl.create_default_context()
+        ctx.set_alpn_protocols(ALPN)
+        _tls = ctx
+    return _tls
 
 
 # ------------------------------------------------------------------ fetching
@@ -53,7 +70,7 @@ def default_fetch(url, method="GET", timeout=15):
         _last_arxiv_call = time.time()
     req = urllib.request.Request(url, method=method, headers={"User-Agent": UA})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with urllib.request.urlopen(req, timeout=timeout, context=tls_context()) as r:
             body = r.read(400_000).decode("utf-8", "replace") if method == "GET" else ""
             res = (r.status, body)
     except urllib.error.HTTPError as e:
