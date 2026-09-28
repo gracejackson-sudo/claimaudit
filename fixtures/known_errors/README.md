@@ -7,10 +7,15 @@ and it must not be cited as such.
 
 The 3-of-8 result came from replaying the tool over the
 `quant-delta-predictor` repository as it stood at commit `fd682b2`, before a
-round of real fixes. **That repository state no longer exists.** The working
-copy on disk is not a git repository, so `fd682b2` is not recoverable from it,
-and the tree it contains is the post-fix state. The original measurement
-cannot be repeated.
+round of real fixes. That commit is now on the public repository at
+[`github.com/gracejackson-sudo/quant-delta-predictor@fd682b2`](https://github.com/gracejackson-sudo/quant-delta-predictor/tree/fd682b2)
+(the repository was not under git at the time of the original replay; when it
+was subsequently `git init`'d, the pre-fix tree was captured as `fd682b2`).
+Even so, **the original measurement cannot be repeated**: the fixtures on
+this side (`fixtures/known_errors/corpus/`) are a reconstruction of the same
+eight errors and not a byte-identical copy of the day-3 documents the
+original replay ran over, so a fresh replay against the public `fd682b2`
+tree would score a different set of documents.
 
 What this corpus *is*: a small set of documents that reproduces the same eight
 errors, so that the tool's behaviour on them is pinned by a test. It is a
