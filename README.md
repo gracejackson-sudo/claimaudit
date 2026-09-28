@@ -1,13 +1,71 @@
 # claimaudit
 
-A **first-pass** checker for the claims, numbers and citations in a folder of
-documents. It surfaces things for a human to look at. It is not an audit, it
-does not judge whether anything is true, and it will miss most errors a careful
-reader would catch.
+A pre-commit and CI checker that flags overclaim language, unsupported numbers
+and broken citations in a folder of documents. Every finding is `VERIFIED`,
+`FLAGGED` or `UNVERIFIABLE` — it is not a truth check, it does not judge
+whether anything is true, and it will miss most errors a careful reader would
+catch. It was built by generalizing a week of manual audit work and automates
+only the mechanical parts of it.
 
-It was built by generalizing a week of manual audit work. That work relied on
-human judgment plus long back-and-forth reasoning. This tool automates only the
-mechanical parts of it.
+## Try the free check in about a minute
+
+    python3 -m pip install -e .
+    claimaudit check paper.tex --only overclaim
+
+The `overclaim` check is free — no key required — and it runs against your own
+prose in seconds. Exit code is 1 if anything is flagged, 0 if not, 2 on usage
+errors, so CI can tell "the documents have problems" from "the tool was pointed
+at nothing".
+
+## What it caught, measured
+
+Small samples on real repositories, listed with the caveats they came with.
+
+- **3 of 8 known errors on a real replay** — a wrong co-author in a bibliography
+  entry, "nobody" language in a paper, and stale numbers that differed between
+  two documents. The other 5 needed judgment or computation the tool does not
+  attempt (a wrong mean quoted in prose, "thousands of measurements" when there
+  were 817, an overclaim about its own verification, a loaded word
+  ("fabricated"), and a loosely stated variance range). If the author tags the
+  claim and their pipeline writes out the computed value, the registry check
+  catches E4 as well — **4 of 8, and only for an author who opts in**, measured
+  by `test_what_annotating_the_corpus_adds`. That replay was a one-off and
+  cannot be repeated (the repository state has not been preserved); the 3-of-8
+  figure stands as a report of something we did once, not as a benchmark
+  anyone can re-run. A reconstruction of the same eight errors is checked in
+  under `fixtures/known_errors/`.
+- **15 of 16 sampled VERIFIED items were legitimate matches** on that
+  repository, in a hand check. 94% precision on a small random sample.
+- **15 of 15 passage-selection reached the passage a person had identified**
+  across ten real cited papers in the `citation` / `support` fixtures.
+- **One live-model run, 2026-09-26** on `claude-sonnet-5`, 16 cases:
+  the hard rule held (no wrong claim came back `SUPPORTED`); every
+  `SUPPORTED` or `CONTRADICTED` verdict carried a quote that verified
+  against the passages shown. Yield was low — 1 of 8 true claims came back
+  `SUPPORTED`, 1 of 8 wrong ones as `CONTRADICTED`; the remaining 14 came back
+  `UNCLEAR`, mostly because the model's quote did not match the shown passages
+  verbatim and was discarded by the guard. Results are checked in as
+  `fixtures/citation_support/llm_results.json` and re-checked offline in
+  `tests/test_judge.py::TestRecordedLiveRun`. One run at temperature 0 on 16
+  cases is not extensive validation.
+- **Arithmetic checks are quiet**: on a 620-file repository the `benchmark`
+  check fires once and `seeds` not at all. One false positive during
+  development (`89.0% at 3.93pp versus 88.3% at 5.48pp` read as a gap when it
+  is two pairs of coverage and width) is now a regression test.
+
+Every one of those numbers came from a single sample. Treat them as anecdotes,
+not benchmarks. The tests exist to catch drift if the scoring changes, not to
+establish independent evidence for the numbers themselves.
+
+## Real usage
+
+claimaudit has paying users — purchases are into the hundreds as of the last
+count in `docs/keys.md`. Every buyer today gets the same shared early-access
+key; this is an honor system, and the MIT license makes that explicit
+(anyone who reads the code can bypass it). The tradeoff was deliberate,
+already-approved, and `docs/keys.md` records the intent to rotate to per-buyer
+keys before the customer count or the value of a paid check makes the shared
+key feel like a broken promise. That switch is not urgent as of this writing.
 
 ## What it checks
 
@@ -22,6 +80,8 @@ mechanical parts of it.
 | `benchmark` | checks that a stated gain matches the two numbers it is stated between | licensed |
 | `seeds` | checks that a stated mean, spread and seed count can describe the same runs | licensed |
 
+## Verdicts
+
 Every finding is `VERIFIED`, `FLAGGED` or `UNVERIFIABLE`:
 
 * `VERIFIED` means *matched something in your files or a public record*. It does not mean the claim is correct.
@@ -31,24 +91,6 @@ Every finding is `VERIFIED`, `FLAGGED` or `UNVERIFIABLE`:
 The text report lists at most 200 items per check. When it trims, it says how
 many it is hiding, and the summary totals always count every finding. `--json`
 carries the complete set.
-
-The `[scan]` section also warns when much of what it read looks *collected*
-rather than written by you — scraped pages, vendored docs, generated cards.
-Auditing those treats someone else's words as your claims; on one real
-repository they produced 85% of all findings. claimaudit never excludes them
-for you, because every rule safe enough to apply automatically turned out not
-to be: `.gitignore` is used for private drafts as often as for generated
-files, and YAML frontmatter marks hand-written pages in Jekyll, Hugo, Quarto
-and Obsidian. It reports the guess, says it is a guess, and prints the
-`--exclude` you would need. A wrong guess costs you a line of output, never a
-finding.
-
-A `[scan]` section appears when something could not be read: a file the
-process has no permission to open, or a CSV too long to index. Those items are
-always listed in full rather than collapsed into a count, because a file that
-was never read must not look like a file that passed. If no readable documents
-are found at all, that is reported and the exit code is 1 — pointing the tool
-at the wrong folder should not look like a clean result.
 
 ## Install and use
 
@@ -133,22 +175,7 @@ required check that breaks for reasons nobody can fix gets switched off.
 `--json` output carries `schema_version`, which only changes if a consumer
 would have to change with it.
 
-## What it can and cannot do (measured, small samples)
-
-We replayed it on one repository as it stood before a round of fixes, against
-eight errors we already knew were real:
-
-* **Caught (3 of 8):** a wrong co-author in a bibliography entry, "nobody" language in a paper, and stale numbers that differed between two documents.
-* **Missed (5 of 8):** a wrong mean quoted in prose, "thousands of measurements" when there were 817, an overclaim about its own verification, a loaded word ("fabricated"), and a loosely stated variance range. These need judgment or computation it does not attempt.
-
-That replay was a one-off and **cannot be repeated**: the repository state it
-ran against has not been preserved, so the 3-of-8 figure stands as a report of
-something we did once, not as a benchmark anyone can re-run. A reconstruction
-of the same eight errors is checked in under `fixtures/known_errors/` with
-`tests/test_known_errors.py` pinning the tool's behaviour on each one. That
-exists to catch drift if the scoring changes — it is not independent evidence
-for 3 of 8, and `fixtures/known_errors/README.md` says so and records which
-parts of it are verbatim and which were rebuilt from a description.
+## What it can and cannot do
 
 Numeric verification is deliberately conservative. On that repository only
 about 4% of numeric claims were VERIFIED, mostly where the repo had a registry
@@ -162,37 +189,12 @@ It does **not**: follow a calculation, read numbers out of figures or PDFs,
 check that a cited paper supports the sentence citing it, or verify anything
 that has no matching CSV/JSON in the folder.
 
-### The authored-voice assumption
-
-Every sentence the tool can read is audited as though the author is asserting
-it. It cannot tell authored claims from quoted, templated, or machine-generated
-text. That is not an `overclaim` quirk — it is true of every check that reads
-prose.
-
-On the fifteen-paper run this produced real flags on text the authors did not
-write: a few-shot prompt exemplar ("The coin was flipped by no one.") was a
-universal negative, a dataset row ("Jonas Valanciunas beat the buzzer.") was a
-superiority claim, and a language model's own generated sample was a novelty
-claim. The workaround today is `--exclude` on those files. There is no
-automatic skip, because a rule safe enough to apply without a human would
-also drop authored prose we have no way to recognise.
-
 ### What the newer checks changed: nothing, on those eight
 
 `registry`, `benchmark`, `seeds`, notebook and `.docx` reading were added
 after that replay. Re-running the frozen corpus with all of them enabled
 produces **the same 3 of 8 and not one extra flag**. The headline number is
 unchanged and none of the new work should be quoted as improving it.
-
-One caveat in the other direction, because it is a different question. If the
-author tags the claim and their pipeline writes out the computed value, the
-registry check catches E4 as well — the paper says the target has mean
--0.36pp where the data means -0.39pp. That is **4 of 8, and only for an author
-who opts in**, which is a different claim from the headline and is measured by
-a test (`test_what_annotating_the_corpus_adds`) rather than asserted. The
-remaining four are not reachable this way: two are vague rather than wrong, so
-there is no single value to bind to, one is a word choice, and one is a
-citation.
 
 The arithmetic checks are built to be quiet. On the same 620-file repository
 `benchmark` fires once and `seeds` not at all, because that corpus rarely
@@ -211,6 +213,45 @@ Where two results with error bars are called a significant improvement and the
 bars overlap, that is reported as `UNVERIFIABLE`, not flagged. Overlapping
 bars do not prove the result wrong; they mean the sentence does not settle it
 either way. If a test is named, nothing is said at all.
+
+## Operational nuance
+
+### The authored-voice assumption
+
+Every sentence the tool can read is audited as though the author is asserting
+it. It cannot tell authored claims from quoted, templated, or machine-generated
+text. That is not an `overclaim` quirk — it is true of every check that reads
+prose.
+
+On the fifteen-paper run this produced real flags on text the authors did not
+write: a few-shot prompt exemplar ("The coin was flipped by no one.") was a
+universal negative, a dataset row ("Jonas Valanciunas beat the buzzer.") was a
+superiority claim, and a language model's own generated sample was a novelty
+claim. The workaround today is `--exclude` on those files. There is no
+automatic skip, because a rule safe enough to apply without a human would
+also drop authored prose we have no way to recognise.
+
+### Collected content
+
+The `[scan]` section also warns when much of what it read looks *collected*
+rather than written by you — scraped pages, vendored docs, generated cards.
+Auditing those treats someone else's words as your claims; on one real
+repository they produced 85% of all findings. claimaudit never excludes them
+for you, because every rule safe enough to apply automatically turned out not
+to be: `.gitignore` is used for private drafts as often as for generated
+files, and YAML frontmatter marks hand-written pages in Jekyll, Hugo, Quarto
+and Obsidian. It reports the guess, says it is a guess, and prints the
+`--exclude` you would need. A wrong guess costs you a line of output, never a
+finding.
+
+### Unreadable files
+
+A `[scan]` section appears when something could not be read: a file the
+process has no permission to open, or a CSV too long to index. Those items are
+always listed in full rather than collapsed into a count, because a file that
+was never read must not look like a file that passed. If no readable documents
+are found at all, that is reported and the exit code is 1 — pointing the tool
+at the wrong folder should not look like a clean result.
 
 ## Privacy
 
